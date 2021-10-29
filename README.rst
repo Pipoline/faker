@@ -15,15 +15,15 @@ Faker is heavily inspired by `PHP Faker`_, `Perl Faker`_, and by `Ruby Faker`_.
     _|      _|    _|  _|  _|    _|        _|
     _|        _|_|_|  _|    _|    _|_|_|  _|
 
-|pypi| |unix_build| |windows_build| |coverage| |license|
+|pypi| |build| |coverage| |license|
 
 ----
 
 Compatibility
 -------------
 
-Starting from version ``4.0.0``, ``Faker`` dropped support for Python 2 and only supports Python
-3.5 and above. If you still need Python 2 compatibility, please install version ``3.0.1`` in the
+Starting from version ``4.0.0``, ``Faker`` dropped support for Python 2 and from version ``5.0.0``
+only supports Python 3.6 and above. If you still need Python 2 compatibility, please install version ``3.0.1`` in the
 meantime, and please consider updating your codebase to support Python 3 so you can enjoy the
 latest features ``Faker`` has to offer. Please see the `extended docs`_ for more details, especially
 if you are upgrading from version ``2.0.4`` and below as there might be breaking changes.
@@ -120,7 +120,7 @@ Localization
 
 ``faker.Faker`` can take a locale as an argument, to return localized
 data. If no localized provider is found, the factory falls back to the
-default en\_US locale.
+default LCID string for US english, ie: ``en_US``.
 
 .. code:: python
 
@@ -165,12 +165,21 @@ providers package. The localization of Faker is an ongoing process, for
 which we need your help. Please don't hesitate to create a localized
 provider for your own locale and submit a Pull Request (PR).
 
+Optimizations
+-------------
+The Faker constructor takes a performance-related argument called
+``use_weighting``. It specifies whether to attempt to have the frequency
+of values match real-world frequencies (e.g. the English name Gary would
+be much more frequent than the name Lorimer). If ``use_weighting`` is ``False``,
+then all items have an equal chance of being selected, and the selection
+process is much faster. The default is ``True``.
+
 Command line usage
 ------------------
 
 When installed, you can invoke faker from the command-line:
 
-.. code:: bash
+.. code:: console
 
     faker [-h] [--version] [-o output]
           [-l {bg_BG,cs_CZ,...,zh_CN,zh_TW}]
@@ -210,7 +219,7 @@ Where:
 
 Examples:
 
-.. code:: bash
+.. code:: console
 
     $ faker address
     968 Bahringer Garden Apt. 722
@@ -221,7 +230,7 @@ Examples:
     94812 Biedenkopf
 
     $ faker profile ssn,birthdate
-    {'ssn': u'628-10-1085', 'birthdate': '2008-03-29'}
+    {'ssn': '628-10-1085', 'birthdate': '2008-03-29'}
 
     $ faker -r=3 -s=";" name
     Willam Kertzmann;
@@ -241,7 +250,7 @@ How to create a Provider
 
     # create new provider class
     class MyProvider(BaseProvider):
-        def foo(self):
+        def foo(self) -> str:
             return 'bar'
 
     # then add new provider to faker instance
@@ -250,6 +259,31 @@ How to create a Provider
     # now you can use:
     fake.foo()
     # 'bar'
+
+
+How to create a Dynamic Provider
+--------------------------------
+
+Dynamic providers can read elements from an external source.
+
+.. code:: python
+
+    from faker import Faker
+    from faker.providers import DynamicProvider
+
+    medical_professions_provider = DynamicProvider(
+         provider_name="medical_profession",
+         elements=["dr.", "doctor", "nurse", "surgeon", "clerk"],
+    )
+
+    fake = Faker()
+
+    # then add new provider to faker instance
+    fake.add_provider(medical_professions_provider)
+
+    # now you can use:
+    fake.medical_profession()
+    # 'dr.'
 
 How to customize the Lorem Provider
 -----------------------------------
@@ -309,6 +343,38 @@ The ``.random`` property on the generator returns the instance of
 By default all generators share the same instance of ``random.Random``, which
 can be accessed with ``from faker.generator import random``. Using this may
 be useful for plugins that want to affect all faker instances.
+
+Unique values
+-------------
+
+Through use of the ``.unique`` property on the generator, you can guarantee
+that any generated values are unique for this specific instance.
+
+.. code:: python
+
+   from faker import Faker
+   fake = Faker()
+   names = [fake.unique.first_name() for i in range(500)]
+   assert len(set(names)) == len(names)
+
+Calling ``fake.unique.clear()`` clears the already seen values.
+Note, to avoid infinite loops, after a number of attempts to find a unique
+value, Faker will throw a ``UniquenessException``. Beware of the `birthday
+paradox <https://en.wikipedia.org/wiki/Birthday_problem>`_, collisions
+are more likely than you'd think.
+
+
+.. code:: python
+
+   from faker import Faker
+
+   fake = Faker()
+   for i in range(3):
+        # Raises a UniquenessException
+        fake.unique.boolean()
+
+In addition, only hashable arguments and return values can be used
+with ``.unique``.
 
 Seeding the Generator
 ---------------------
@@ -406,13 +472,9 @@ Credits
     :target: https://coveralls.io/r/joke2k/faker?branch=master
     :alt: Test coverage
 
-.. |unix_build| image:: https://img.shields.io/travis/joke2k/faker/master.svg?style=flat-square&label=unix%20build
-    :target: http://travis-ci.org/joke2k/faker
+.. |build| image:: https://github.com/joke2k/faker/workflows/Python%20Tests/badge.svg?branch=master&event=push
+    :target: https://github.com/joke2k/faker/actions?query=workflow%3A%22Python+Tests%22+branch%3Amaster+event%3Apush
     :alt: Build status of the master branch on Mac/Linux
-
-.. |windows_build|  image:: https://img.shields.io/appveyor/ci/joke2k/faker/master.svg?style=flat-square&label=windows%20build
-    :target: https://ci.appveyor.com/project/joke2k/faker
-    :alt: Build status of the master branch on Windows
 
 .. |license| image:: https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
     :target: https://raw.githubusercontent.com/joke2k/faker/master/LICENSE.txt

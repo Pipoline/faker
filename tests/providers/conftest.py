@@ -7,11 +7,11 @@ from faker import Faker
 from faker.contrib.pytest.plugin import DEFAULT_SEED
 
 LOCALE_TEST_CLASS_NAME_REGEX = re.compile(
-    r'^Test(?P<language>[A-Z][a-z]{1,2})(?P<region>[A-Z][a-z])$',
+    r"^Test(?P<language>[A-Z][a-z]{1,2})(?P<region>[A-Z][a-z])$",
 )
 
 
-@pytest.fixture(scope='class', autouse=True)
+@pytest.fixture(scope="class", autouse=True)
 def _class_locale_faker(request):
     if not request.cls:
         return None
@@ -19,8 +19,8 @@ def _class_locale_faker(request):
     match = LOCALE_TEST_CLASS_NAME_REGEX.fullmatch(class_name)
     if not match:
         return None
-    locale = '{language}_{region}'.format(**match.groupdict())
-    locale = pylocale.normalize(locale).split('.')[0]
+    locale = f'{match.group("language")}_{match.group("region")}'
+    locale = pylocale.normalize(locale).split(".")[0]
     return Faker(locale=locale)
 
 
@@ -32,7 +32,7 @@ def faker(_class_locale_faker, faker):
     return _class_locale_faker
 
 
-@pytest.fixture(scope='class', autouse=True)
+@pytest.fixture(scope="class", autouse=True)
 def num_samples(request):
     try:
         num = int(request.cls.num_samples)
