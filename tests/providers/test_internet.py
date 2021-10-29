@@ -2,6 +2,7 @@ import re
 
 from ipaddress import ip_address, ip_network
 from itertools import cycle
+from typing import Pattern
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -13,6 +14,9 @@ from faker.providers.internet import Provider as InternetProvider
 from faker.providers.internet.en_GB import Provider as EnGbInternetProvider
 from faker.providers.internet.es_ES import Provider as EsEsInternetProvider
 from faker.providers.internet.pl_PL import Provider as PlPlInternetProvider
+from faker.providers.internet.ro_RO import Provider as RoRoInternetProvider
+from faker.providers.internet.ru_RU import Provider as RuRuInternetProvider
+from faker.providers.internet.th_TH import Provider as ThThInternetProvider
 from faker.providers.internet.zh_CN import Provider as ZhCnInternetProvider
 from faker.providers.person.ja_JP import Provider as JaPersonProvider
 from faker.utils import text
@@ -20,54 +24,66 @@ from faker.utils import text
 
 class TestInternetProvider:
     """Test internet provider methods"""
+
     num_samples = 100
-    ipv4_pattern = re.compile(
-        r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}'
-        r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$',
+    ipv4_pattern: Pattern = re.compile(
+        r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}" r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
     )
-    ipv4_network_pattern = re.compile(
-        r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}'
-        r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)'
-        r'/(?:\d|[12]\d|3[0-2])$',
+    ipv4_network_pattern: Pattern = re.compile(
+        r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
+        r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+        r"/(?:\d|[12]\d|3[0-2])$",
     )
 
     def test_email(self, faker, num_samples):
         for _ in range(num_samples):
             email = faker.email()
-            assert '@' in email
+            assert "@" in email
+
+    def test_safe_default_email(self, faker, num_samples):
+        expected_domains = ["example.com", "example.org", "example.net"]
+        for _ in range(num_samples):
+            email = faker.email()
+            assert email.split("@")[1] in expected_domains
+
+    def test_unsafe_email(self, faker, num_samples):
+        not_expected_domains = ["example.com", "example.org", "example.net"]
+        for _ in range(num_samples):
+            email = faker.email(safe=False)
+            assert email.split("@")[1] not in not_expected_domains
 
     def test_email_with_domain(self, faker):
-        domain = 'example.com'
+        domain = "example.com"
         email = faker.email(domain=domain)
-        assert email.split('@')[1] == domain
+        assert email.split("@")[1] == domain
 
     def test_safe_email(self, faker, num_samples):
-        expected_domains = ['example.com', 'example.org', 'example.net']
+        expected_domains = ["example.com", "example.org", "example.net"]
         for _ in range(num_samples):
             email = faker.safe_email()
-            assert email.split('@')[1] in expected_domains
+            assert email.split("@")[1] in expected_domains
 
     def test_safe_domain_names(self, faker, num_samples):
-        expected_domains = ['example.com', 'example.org', 'example.net']
+        expected_domains = ["example.com", "example.org", "example.net"]
         for _ in range(num_samples):
             safe_domain_name = faker.safe_domain_name()
             assert safe_domain_name in expected_domains
 
     @patch(
-        'faker.providers.internet.Provider.image_placeholder_services',
-        {'https://dummyimage.com/{width}x{height}'},
+        "faker.providers.internet.Provider.image_placeholder_services",
+        {"https://dummyimage.com/{width}x{height}"},
     )
     def test_image_url(self, faker):
         my_width = 500
         my_height = 1024
         url = faker.image_url(my_width, my_height)
-        assert 'https://dummyimage.com/{}x{}'.format(my_width, my_height) == url
+        assert f"https://dummyimage.com/{my_width}x{my_height}" == url
         url = faker.image_url()
-        assert 'https://dummyimage.com/' in url
+        assert "https://dummyimage.com/" in url
 
     def test_hostname(self, faker):
         hostname_1_level = faker.hostname(levels=1)
-        hostname_parts = hostname_1_level.split('.')
+        hostname_parts = hostname_1_level.split(".")
         assert hostname_1_level and isinstance(hostname_1_level, str)
         assert len(hostname_parts) == 3
 
@@ -103,10 +119,10 @@ class TestInternetProvider:
         # The extra [None] here is to test code path involving whole IPv4 pool
         for address_class in list(_IPv4Constants._network_classes.keys()) + [None]:
             if address_class is None:
-                networks_attr = '_cached_all_networks'
+                networks_attr = "_cached_all_networks"
             else:
-                networks_attr = '_cached_all_class_{}_networks'.format(address_class)
-            weights_attr = '{}_weights'.format(networks_attr)
+                networks_attr = f"_cached_all_class_{address_class}_networks"
+            weights_attr = f"{networks_attr}_weights"
             provider = InternetProvider(faker)
 
             # First, test cache creation
@@ -117,12 +133,17 @@ class TestInternetProvider:
             assert hasattr(provider, weights_attr)
 
             # Then, test cache access on subsequent calls
-            with patch.object(InternetProvider, networks_attr, create=True,
-                              new_callable=PropertyMock) as mock_networks_cache:
-                with patch.object(InternetProvider, weights_attr, create=True,
-                                  new_callable=PropertyMock) as mock_weights_cache:
+            with patch.object(
+                InternetProvider, networks_attr, create=True, new_callable=PropertyMock
+            ) as mock_networks_cache:
+                with patch.object(
+                    InternetProvider,
+                    weights_attr,
+                    create=True,
+                    new_callable=PropertyMock,
+                ) as mock_weights_cache:
                     # Keep test fast by patching the cache attributes to return something simple
-                    mock_networks_cache.return_value = [ip_network('10.0.0.0/24')]
+                    mock_networks_cache.return_value = [ip_network("10.0.0.0/24")]
                     mock_weights_cache.return_value = [10]
                     for _ in range(100):
                         provider.ipv4(address_class=address_class)
@@ -135,7 +156,7 @@ class TestInternetProvider:
     def test_ipv4_network_class(self, faker, num_samples):
         for _ in range(num_samples):
             klass = faker.ipv4_network_class()
-            assert klass in 'abc'
+            assert klass in "abc"
 
     def test_ipv4_private(self, faker, num_samples):
         for _ in range(num_samples):
@@ -152,7 +173,8 @@ class TestInternetProvider:
 
     def test_ipv4_private_class(self, faker, num_samples):
         from faker.providers.internet import _IPv4Constants
-        for clas in 'abc':
+
+        for clas in "abc":
             class_network = _IPv4Constants._network_classes[clas]
             class_min = class_network.network_address
             class_max = class_network.broadcast_address
@@ -168,8 +190,8 @@ class TestInternetProvider:
         from faker.providers.internet import _IPv4Constants
 
         for address_class in _IPv4Constants._network_classes.keys():
-            networks_attr = '_cached_public_class_{}_networks'.format(address_class)
-            weights_attr = '{}_weights'.format(networks_attr)
+            networks_attr = f"_cached_public_class_{address_class}_networks"
+            weights_attr = f"{networks_attr}_weights"
             provider = InternetProvider(faker)
 
             # First, test cache creation
@@ -180,12 +202,17 @@ class TestInternetProvider:
             assert hasattr(provider, weights_attr)
 
             # Then, test cache access on subsequent calls
-            with patch.object(InternetProvider, networks_attr, create=True,
-                              new_callable=PropertyMock) as mock_networks_cache:
-                with patch.object(InternetProvider, weights_attr, create=True,
-                                  new_callable=PropertyMock) as mock_weights_cache:
+            with patch.object(
+                InternetProvider, networks_attr, create=True, new_callable=PropertyMock
+            ) as mock_networks_cache:
+                with patch.object(
+                    InternetProvider,
+                    weights_attr,
+                    create=True,
+                    new_callable=PropertyMock,
+                ) as mock_weights_cache:
                     # Keep test fast by patching the cache attributes to return something simple
-                    mock_networks_cache.return_value = [ip_network('10.0.0.0/24')]
+                    mock_networks_cache.return_value = [ip_network("10.0.0.0/24")]
                     mock_weights_cache.return_value = [10]
                     for _ in range(100):
                         provider.ipv4_public(address_class=address_class)
@@ -209,12 +236,13 @@ class TestInternetProvider:
             # Hack around ipaddress module
             # As 192.0.0.0 is net addr of many 192.0.0.0/* nets
             # ipaddress considers them as private
-            if ip_network(address).network_address != ip_address('192.0.0.0'):
+            if ip_network(address).network_address != ip_address("192.0.0.0"):
                 assert not ip_network(address)[0].is_private
 
     def test_ipv4_public_class(self, faker, num_samples):
         from faker.providers.internet import _IPv4Constants
-        for clas in 'abc':
+
+        for clas in "abc":
             class_network = _IPv4Constants._network_classes[clas]
             class_min = class_network.network_address
             class_max = class_network.broadcast_address
@@ -229,20 +257,19 @@ class TestInternetProvider:
     def test_ipv4_distribution_selection(self):
         from faker.generator import Generator, random
         from faker.utils.distribution import choices_distribution
+
         provider = InternetProvider(Generator())
 
-        subnets = [ip_network('10.0.0.0/8'), ip_network('11.0.0.0/8')]
+        subnets = [ip_network("10.0.0.0/8"), ip_network("11.0.0.0/8")]
         valid_weights = [1, 1]
         list_of_invalid_weights = [
-            [1, 2, 3],   # List size does not match subnet list size
-            ['a', 'b'],  # List size matches, but elements are invalid
-            None,        # Not a list or valid iterable
+            [1, 2, 3],  # List size does not match subnet list size
+            ["a", "b"],  # List size matches, but elements are invalid
+            11,  # Not a list or valid iterable
         ]
 
-        with patch('faker.providers.internet.choices_distribution',
-                   wraps=choices_distribution) as mock_choices_fn:
-            with patch('faker.generator.random.choice',
-                       wraps=random.choice) as mock_random_choice:
+        with patch("faker.providers.internet.choices_distribution", wraps=choices_distribution) as mock_choices_fn:
+            with patch("faker.generator.random.choice", wraps=random.choice) as mock_random_choice:
                 # If weights argument is valid, only `choices_distribution` should be called
                 provider._random_ipv4_address_from_subnets(subnets, valid_weights)
                 assert mock_choices_fn.call_count == 1
@@ -256,7 +283,7 @@ class TestInternetProvider:
                     mock_choices_fn.reset_mock()
 
                     provider._random_ipv4_address_from_subnets(subnets, invalid_weights)
-                    assert mock_choices_fn.call_count == 1
+                    assert mock_choices_fn.call_count == 0
                     assert mock_random_choice.call_count == 1
 
     def test_ipv6(self, faker, num_samples):
@@ -266,16 +293,13 @@ class TestInternetProvider:
             address = provider.ipv6()
             assert len(address) >= 3  # ::1
             assert len(address) <= 39
-            assert (
-                re.compile(r'^([0-9a-f]{0,4}:){2,7}[0-9a-f]{1,4}$').search(address))
+            assert re.compile(r"^([0-9a-f]{0,4}:){2,7}[0-9a-f]{1,4}$").search(address)
 
         for _ in range(num_samples):
             address = provider.ipv6(network=True)
             assert len(address) >= 4  # ::/8
             assert len(address) <= 39 + 4
-            assert (
-                re.compile(r'^([0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}/\d{1,3}$').search(
-                    address))
+            assert re.compile(r"^([0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}/\d{1,3}$").search(address)
 
     def test_port_number(self, faker, num_samples):
         for _ in range(num_samples):
@@ -286,8 +310,15 @@ class TestInternetProvider:
 
     def test_http_method(self, faker, num_samples):
         expected_methods = [
-            'CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST',
-            'PUT', 'TRACE',
+            "CONNECT",
+            "DELETE",
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PATCH",
+            "POST",
+            "PUT",
+            "TRACE",
         ]
 
         got_methods = set()
@@ -299,27 +330,51 @@ class TestInternetProvider:
     def test_dga(self, faker):
         assert faker.dga() != faker.dga()
 
-        expected_domain = 'cqphixmpdfpptskr.com'
-        assert faker.dga(day=1, month=1, year=1000, tld='com', length=16) == expected_domain
+        expected_domain = "cqphixmpdfpptskr.com"
+        assert faker.dga(day=1, month=1, year=1000, tld="com", length=16) == expected_domain
+
+    def test_iana_id(self, faker, num_samples):
+        for _ in range(num_samples):
+            assert 1 <= int(faker.iana_id()) <= 8888888
+
+    def test_ripe_id(self, faker, num_samples):
+        pattern: Pattern = re.compile(r"^ORG-[A-Z]{2,4}[1-9]\d{0,4}-RIPE$")
+        for _ in range(num_samples):
+            assert pattern.fullmatch(faker.ripe_id())
+
+    def test_nic_handles(self, faker, num_samples):
+        pattern: Pattern = re.compile(r"^[A-Z]{2,4}[1-9]\d{0,4}-[A-Z]*")
+        for _ in range(num_samples):
+            nhs = faker.nic_handles()
+            for nh in nhs:
+                assert pattern.fullmatch(nh)
+
+        nhs = faker.nic_handles(suffix="??", count=num_samples)
+        assert len(nhs) == num_samples
+        for nh in nhs:
+            assert pattern.fullmatch(nh)
+
+        with pytest.raises(ValueError):
+            faker.nic_handles(suffix="")
 
 
 class TestInternetProviderUrl:
-    """ Test internet url generation """
+    """Test internet url generation"""
 
     @staticmethod
     def is_correct_scheme(url, schemes):
-        return any(url.startswith('{}://'.format(scheme)) for scheme in schemes)
+        return any(url.startswith(f"{scheme}://") for scheme in schemes)
 
     def test_url_default_schemes(self, faker):
         for _ in range(100):
             url = faker.url()
-            assert self.is_correct_scheme(url, ['http', 'https'])
+            assert self.is_correct_scheme(url, ["http", "https"])
 
     def test_url_custom_schemes(self, faker):
         schemes_sets = [
-            ['usb'],
-            ['ftp', 'file'],
-            ['usb', 'telnet', 'http'],
+            ["usb"],
+            ["ftp", "file"],
+            ["usb", "telnet", "http"],
         ]
         for _, schemes in zip(range(100), cycle(schemes_sets)):
             url = faker.url(schemes=schemes)
@@ -328,8 +383,8 @@ class TestInternetProviderUrl:
     def test_url_empty_schemes_list_generate_schemeless_urls(self, faker):
         for _ in range(100):
             url = faker.url(schemes=[])
-            assert not url.startswith('http')
-            assert url.startswith('://')
+            assert not url.startswith("http")
+            assert url.startswith("://")
 
 
 class TestJaJp:
@@ -346,7 +401,7 @@ class TestJaJp:
         deep_domain_name = faker.domain_name(3)
         assert isinstance(domain_name, str)
         assert isinstance(deep_domain_name, str)
-        assert deep_domain_name.count('.') == 3
+        assert deep_domain_name.count(".") == 3
         with pytest.raises(ValueError):
             faker.domain_name(-1)
 
@@ -369,86 +424,123 @@ class TestZhCn:
         assert len(domain_word) > 1
 
     @patch(
-        'faker.providers.internet.Provider.tld',
-        lambda x: 'cn',
+        "faker.providers.internet.Provider.tld",
+        lambda x: "cn",
     )
     def test_domain_name(self, faker):
         domain_name_1_level = faker.domain_name(levels=1)
         domain_parts = domain_name_1_level.split(".")
         assert len(domain_parts) == 2
-        assert domain_parts[-1] == 'cn'
+        assert domain_parts[-1] == "cn"
         domain_name_2_level = faker.domain_name(levels=2)
         domain_parts = domain_name_2_level.split(".")
         assert len(domain_parts) == 3
-        assert domain_parts[-1] == 'cn'
-        assert domain_parts[1] in ['ac', 'com', 'edu', 'gov', 'mil',
-                                   'net', 'org', 'ah', 'bj', 'cq',
-                                   'fj', 'gd', 'gs', 'gz', 'gx', 'ha',
-                                   'hb', 'he', 'hi', 'hk', 'hl', 'hn',
-                                   'jl', 'js', 'jx', 'ln', 'mo', 'nm',
-                                   'nx', 'qh', 'sc', 'sd', 'sh', 'sn',
-                                   'sx', 'tj', 'xj', 'xz', 'yn', 'zj']
+        assert domain_parts[-1] == "cn"
+        assert domain_parts[1] in [
+            "ac",
+            "com",
+            "edu",
+            "gov",
+            "mil",
+            "net",
+            "org",
+            "ah",
+            "bj",
+            "cq",
+            "fj",
+            "gd",
+            "gs",
+            "gz",
+            "gx",
+            "ha",
+            "hb",
+            "he",
+            "hi",
+            "hk",
+            "hl",
+            "hn",
+            "jl",
+            "js",
+            "jx",
+            "ln",
+            "mo",
+            "nm",
+            "nx",
+            "qh",
+            "sc",
+            "sd",
+            "sh",
+            "sn",
+            "sx",
+            "tj",
+            "xj",
+            "xz",
+            "yn",
+            "zj",
+        ]
 
     def test_domain_name_one_level_after_tld(self, faker):
         provider = ZhCnInternetProvider(faker)
         for _ in range(100):
             domain_name = faker.domain_name(levels=1)
-            domain_parts = domain_name.split('.')
+            domain_parts = domain_name.split(".")
             assert len(domain_parts) == 2
             assert domain_parts[-1] in provider.tlds.keys()
             assert domain_parts[0] not in provider.second_level_domains
 
-    @patch('faker.providers.internet.zh_CN.Provider.domain_word')
-    @patch('faker.providers.internet.Provider.tld')
+    @patch("faker.providers.internet.zh_CN.Provider.domain_word")
+    @patch("faker.providers.internet.Provider.tld")
     def test_domain_name_two_levels_after_cn_tld(self, mock_tld, mock_domain_word, faker):
         provider = ZhCnInternetProvider(faker)
 
         # If tld() returns cn, second level name should be selected from second_level_domains
         # and domain_word() will only be called once which will be used for the third level
-        mock_tld.return_value = 'cn'
-        mock_domain_word.return_value = 'li'
+        mock_tld.return_value = "cn"
+        mock_domain_word.return_value = "li"
         for _ in range(100):
             mock_domain_word.reset_mock()
             domain_name = faker.domain_name(levels=2)
-            domain_parts = domain_name.split('.')
+            domain_parts = domain_name.split(".")
             assert len(domain_parts) == 3
-            assert domain_parts[-1] == 'cn'
+            assert domain_parts[-1] == "cn"
             assert domain_parts[-2] in provider.second_level_domains
-            assert domain_parts[0] == 'li'
+            assert domain_parts[0] == "li"
             assert mock_domain_word.call_count == 1
 
-    @patch('faker.providers.internet.zh_CN.Provider.domain_word')
-    @patch('faker.providers.internet.Provider.tld')
+    @patch("faker.providers.internet.zh_CN.Provider.domain_word")
+    @patch("faker.providers.internet.Provider.tld")
     def test_domain_name_two_levels_after_non_cn_tld(self, mock_tld, mock_domain_word, faker):
         # If tld() does not return cn, domain_word() will be called twice
         mock_domain_word.reset_mock()
-        mock_tld.return_value = 'net'
-        mock_domain_word.return_value = 'li'
+        mock_tld.return_value = "net"
+        mock_domain_word.return_value = "li"
         domain_name = faker.domain_name(levels=2)
-        assert domain_name == 'li.li.net'
+        assert domain_name == "li.li.net"
         assert mock_domain_word.call_count == 2
 
-    @patch('faker.providers.internet.zh_CN.Provider.domain_word')
-    @patch('faker.providers.internet.Provider.tld')
+    @patch("faker.providers.internet.zh_CN.Provider.domain_word")
+    @patch("faker.providers.internet.Provider.tld")
     def test_domain_name_more_than_two_levels_after_cn_tld(self, mock_tld, mock_domain_word, faker):
         provider = ZhCnInternetProvider(faker)
 
-        mock_tld.return_value = 'cn'
-        mock_domain_word.return_value = 'li'
+        mock_tld.return_value = "cn"
+        mock_domain_word.return_value = "li"
         for levels in range(3, 10):
-            with patch('faker.providers.internet.zh_CN.Provider.domain_name',
-                       wraps=faker.domain_name) as mock_domain_name:
+            with patch(
+                "faker.providers.internet.zh_CN.Provider.domain_name",
+                wraps=faker.domain_name,
+            ) as mock_domain_name:
                 mock_tld.reset_mock()
                 mock_domain_word.reset_mock()
                 mock_domain_name.reset_mock()
                 domain_name = faker.domain_name(levels=levels)
-                domain_parts = domain_name.split('.')
+                domain_parts = domain_name.split(".")
 
                 # Same assertions as levels=2 for tld and second level if tld is cn
                 # But every level henceforth should return the mocked value
-                assert domain_parts[-1] == 'cn'
+                assert domain_parts[-1] == "cn"
                 assert domain_parts[-2] in provider.second_level_domains
-                assert all(domain_part == 'li' for domain_part in domain_parts[:-2])
+                assert all(domain_part == "li" for domain_part in domain_parts[:-2])
 
                 # tld() method should only be called once, domain_word() will be called for each
                 # level after tld except the second, and recursive calls to domain_name() will be
@@ -457,24 +549,26 @@ class TestZhCn:
                 assert mock_domain_word.call_count == levels - 1
                 assert mock_domain_name.call_count == levels - 2
 
-    @patch('faker.providers.internet.zh_CN.Provider.domain_word')
-    @patch('faker.providers.internet.Provider.tld')
+    @patch("faker.providers.internet.zh_CN.Provider.domain_word")
+    @patch("faker.providers.internet.Provider.tld")
     def test_domain_name_more_than_two_levels_after_non_cn_tld(self, mock_tld, mock_domain_word, faker):
-        mock_tld.return_value = 'net'
-        mock_domain_word.return_value = 'li'
+        mock_tld.return_value = "net"
+        mock_domain_word.return_value = "li"
         for levels in range(3, 10):
-            with patch('faker.providers.internet.zh_CN.Provider.domain_name',
-                       wraps=faker.domain_name) as mock_domain_name:
+            with patch(
+                "faker.providers.internet.zh_CN.Provider.domain_name",
+                wraps=faker.domain_name,
+            ) as mock_domain_name:
                 mock_tld.reset_mock()
                 mock_domain_word.reset_mock()
                 mock_domain_name.reset_mock()
                 domain_name = faker.domain_name(levels=levels)
-                domain_parts = domain_name.split('.')
+                domain_parts = domain_name.split(".")
 
                 # Same assertions as levels=2 for non cn tld and
                 # every level henceforth should return the mocked value
-                assert domain_parts[-1] == 'net'
-                assert all(domain_part == 'li' for domain_part in domain_parts[:-1])
+                assert domain_parts[-1] == "net"
+                assert all(domain_part == "li" for domain_part in domain_parts[:-1])
 
                 # tld() method should only be called once, domain_word() will be called for each
                 # level after tld, and recursive calls to domain_name() will be made for each
@@ -524,97 +618,98 @@ class TestNlNl:
     """Test nl_NL internet provider methods"""
 
     @patch(
-        'faker.providers.internet.Provider.user_name',
-        lambda x: 'fabiënné',
+        "faker.providers.internet.Provider.user_name",
+        lambda x: "fabiënné",
     )
     def test_ascii_safe_email(self, faker):
         email = faker.ascii_safe_email()
         validate_email(email)
-        assert email.split('@')[0] == 'fabienne'
+        assert email.split("@")[0] == "fabienne"
 
     @patch(
-        'faker.providers.internet.Provider.user_name',
-        lambda x: 'fabiënné',
+        "faker.providers.internet.Provider.user_name",
+        lambda x: "fabiënné",
     )
     def test_ascii_free_email(self, faker):
         email = faker.ascii_free_email()
         validate_email(email)
-        assert email.split('@')[0] == 'fabienne'
+        assert email.split("@")[0] == "fabienne"
 
     @patch(
-        'faker.providers.internet.Provider.user_name',
-        lambda x: 'fabiënné',
+        "faker.providers.internet.Provider.user_name",
+        lambda x: "fabiënné",
     )
     def test_ascii_company_email(self, faker):
         email = faker.ascii_company_email()
         validate_email(email)
-        assert email.split('@')[0] == 'fabienne'
+        assert email.split("@")[0] == "fabienne"
 
 
 class TestArAa:
     """Test ar_AA internet provider methods"""
 
     @patch(
-        'faker.providers.internet.Provider.user_name',
-        lambda x: 'اصيل',
+        "faker.providers.internet.Provider.user_name",
+        lambda x: "اصيل",
     )
     def test_ascii_safe_email(self, faker):
         email = faker.ascii_safe_email()
         validate_email(email)
-        assert email.split('@')[0] == 'asyl'
+        assert email.split("@")[0] == "asyl"
 
     @patch(
-        'faker.providers.internet.Provider.user_name',
-        lambda x: 'اصيل',
+        "faker.providers.internet.Provider.user_name",
+        lambda x: "اصيل",
     )
     def test_ascii_free_email(self, faker):
         email = faker.ascii_free_email()
         validate_email(email)
-        assert email.split('@')[0] == 'asyl'
+        assert email.split("@")[0] == "asyl"
 
     @patch(
-        'faker.providers.internet.Provider.user_name',
-        lambda x: 'اصيل',
+        "faker.providers.internet.Provider.user_name",
+        lambda x: "اصيل",
     )
     def test_ascii_company_email(self, faker):
         email = faker.ascii_company_email()
         validate_email(email)
-        assert email.split('@')[0] == 'asyl'
+        assert email.split("@")[0] == "asyl"
 
 
 class TestPtBr:
     """Test pt_BR internet provider methods"""
 
     @patch(
-        'faker.providers.internet.Provider.user_name',
-        lambda x: 'VitóriaMagalhães',
+        "faker.providers.internet.Provider.user_name",
+        lambda x: "VitóriaMagalhães",
     )
     def test_ascii_safe_email(self, faker):
         email = faker.ascii_safe_email()
         validate_email(email)
-        assert email.split('@')[0] == 'vitoriamagalhaes'
+        assert email.split("@")[0] == "vitoriamagalhaes"
 
     @patch(
-        'faker.providers.internet.Provider.user_name',
-        lambda x: 'JoãoSimões',
+        "faker.providers.internet.Provider.user_name",
+        lambda x: "JoãoSimões",
     )
     def test_ascii_free_email(self, faker):
         email = faker.ascii_free_email()
         validate_email(email)
-        assert email.split('@')[0] == 'joaosimoes'
+        assert email.split("@")[0] == "joaosimoes"
 
     @patch(
-        'faker.providers.internet.Provider.user_name',
-        lambda x: 'AndréCauã',
+        "faker.providers.internet.Provider.user_name",
+        lambda x: "AndréCauã",
     )
     def test_ascii_company_email(self, faker):
         email = faker.ascii_company_email()
         validate_email(email)
-        assert email.split('@')[0] == 'andrecaua'
+        assert email.split("@")[0] == "andrecaua"
 
 
 class TestEnPh:
     """Test en_PH internet provider methods"""
+
     num_samples = 100
 
     def test_domain_name(self, faker, num_samples):
@@ -625,11 +720,13 @@ class TestEnPh:
 
 class TestFilPh(TestEnPh):
     """Test fil_PH internet provider methods"""
+
     pass
 
 
 class TestTlPh(TestFilPh):
     """Test tl_PH internet provider methods"""
+
     pass
 
 
@@ -651,3 +748,60 @@ class TestEsEs:
     def test_tld(self, faker):
         tld = faker.tld()
         assert tld in EsEsInternetProvider.tlds
+
+
+class TestRoRo:
+    """Test ro_RO internet provider methods"""
+
+    def test_free_email_domain(self, faker):
+        domain = faker.free_email_domain()
+        assert domain in RoRoInternetProvider.free_email_domains
+
+    def test_tld(self, faker):
+        tld = faker.tld()
+        assert tld in PlPlInternetProvider.tlds
+
+
+class TestRuRu:
+    """Test ru_RU internet provider methods"""
+
+    def test_free_email_domain(self, faker):
+        assert faker.free_email_domain() in RuRuInternetProvider.free_email_domains
+
+    def test_tld(self, faker):
+        assert faker.tld() in RuRuInternetProvider.tlds
+
+    @patch(
+        "faker.providers.internet.Provider.user_name",
+        lambda x: "ИванИванов",
+    )
+    def test_ascii_safe_email(self, faker):
+        email = faker.ascii_safe_email()
+        validate_email(email)
+        assert email.split("@")[0] == "ivanivanov"
+
+    @patch(
+        "faker.providers.internet.Provider.user_name",
+        lambda x: "АлександрСмирнов",
+    )
+    def test_ascii_free_email(self, faker):
+        email = faker.ascii_free_email()
+        validate_email(email)
+        assert email.split("@")[0] == "aleksandrsmirnov"
+
+    @patch(
+        "faker.providers.internet.Provider.user_name",
+        lambda x: "СергейКузнецов",
+    )
+    def test_ascii_company_email(self, faker):
+        email = faker.ascii_company_email()
+        validate_email(email)
+        assert email.split("@")[0] == "sergekuznetsov"
+
+
+class TestThTh:
+    """Test th_TH internet provider methods"""
+
+    def test_tld(self, faker):
+        tld = faker.tld()
+        assert tld in ThThInternetProvider.tlds
