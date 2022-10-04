@@ -216,6 +216,18 @@ class TestPyfloat(unittest.TestCase):
         result = self.fake.pyfloat(positive=True, right_digits=0, max_value=1)
         self.assertGreater(result, 0)
 
+    @pytest.mark.skipif(sys.version_info < (3, 10), reason="Only relevant for Python 3.10 and later.")
+    @pytest.mark.filterwarnings(
+        # Convert the warning to an error for this test
+        r"error:non-integer arguments to randrange\(\):DeprecationWarning"
+    )
+    def test_float_min_and_max_value_does_not_warn(self):
+        """
+        Float arguments to randrange are deprecated from Python 3.10. This is a regression
+        test to check that `pyfloat` does not cause a deprecation warning.
+        """
+        self.fake.pyfloat(min_value=-1.0, max_value=1.0)
+
 
 class TestPydecimal(unittest.TestCase):
     def setUp(self):
@@ -234,6 +246,14 @@ class TestPydecimal(unittest.TestCase):
 
         left_digits = len(str(abs(int(result))))
         self.assertGreaterEqual(expected_left_digits, left_digits)
+
+    def test_left_digits_can_be_zero(self):
+        expected_left_digits = 0
+
+        result = self.fake.pydecimal(left_digits=expected_left_digits)
+
+        left_digits = int(result)
+        self.assertEqual(expected_left_digits, left_digits)
 
     def test_right_digits(self):
         expected_right_digits = 10
@@ -373,8 +393,58 @@ class TestPydecimal(unittest.TestCase):
 
     def test_min_value_10_pow_1000_return_greater_number(self):
         Faker.seed("2")
-        result = self.fake.pydecimal(min_value=10 ** 1000)
-        self.assertGreater(result, 10 ** 1000)
+        result = self.fake.pydecimal(min_value=10**1000)
+        self.assertGreater(result, 10**1000)
+
+
+class TestPystr(unittest.TestCase):
+    def setUp(self):
+        self.fake = Faker(includes=["tests.mymodule.en_US"])
+        Faker.seed(0)
+
+    def test_no_parameters(self):
+        some_string = self.fake.pystr()
+        assert isinstance(some_string, str)
+        assert len(some_string) <= 20
+
+    def test_lower_length_limit(self):
+        some_string = self.fake.pystr(min_chars=3)
+        assert isinstance(some_string, str)
+        assert len(some_string) >= 3
+        assert len(some_string) <= 20
+
+    def test_upper_length_limit(self):
+        some_string = self.fake.pystr(max_chars=5)
+        assert isinstance(some_string, str)
+        assert len(some_string) <= 5
+
+    def test_invalid_length_limits(self):
+        with self.assertRaises(AssertionError):
+            self.fake.pystr(min_chars=6, max_chars=5)
+
+    def test_exact_length(self):
+        some_string = self.fake.pystr(min_chars=5, max_chars=5)
+        assert isinstance(some_string, str)
+        assert len(some_string) == 5
+
+    def test_prefix(self):
+        some_string = self.fake.pystr(prefix="START_")
+        assert isinstance(some_string, str)
+        assert some_string.startswith("START_")
+        assert len(some_string) == 26
+
+    def test_suffix(self):
+        some_string = self.fake.pystr(suffix="_END")
+        assert isinstance(some_string, str)
+        assert some_string.endswith("_END")
+        assert len(some_string) == 24
+
+    def test_prefix_and_suffix(self):
+        some_string = self.fake.pystr(min_chars=9, max_chars=20, prefix="START_", suffix="_END")
+        assert isinstance(some_string, str)
+        assert some_string.startswith("START_")
+        assert some_string.endswith("_END")
+        assert len(some_string) >= 19
 
 
 class TestPystrFormat(unittest.TestCase):
@@ -401,26 +471,6 @@ class TestPython(unittest.TestCase):
     def test_pybool(self):
         some_bool = self.factory.pybool()
         assert isinstance(some_bool, bool)
-
-    def py_str(self):
-        some_string = self.factory.pystr()
-        assert isinstance(some_string, str)
-        assert len(some_string) <= 20
-
-        some_string = self.factory.pystr(min_chars=3)
-        assert isinstance(some_string, str)
-        assert len(some_string) >= 3
-        assert len(some_string) <= 20
-
-        some_string = self.factory.pystr(max_chars=5)
-        assert isinstance(some_string, str)
-        assert len(some_string) <= 5
-
-        with self.assertRaises(AssertionError):
-            self.factory.pystr(min_chars=6, max_chars=5)
-
-        with self.assertRaises(AssertionError):
-            self.factory.pystr(min_chars=5, max_chars=5)
 
     def test_pytuple(self):
         with warnings.catch_warnings(record=True) as w:
@@ -468,7 +518,7 @@ class TestPython(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as w:
             some_list = self.factory.pylist(10, True, int, float)
-            assert len(w) == 1
+            assert len(w) == 2
         assert some_list
         for item in some_list:
             assert isinstance(item, (int, float))

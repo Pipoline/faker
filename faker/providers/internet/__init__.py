@@ -1,8 +1,7 @@
-from ipaddress import IPV4LENGTH, IPV6LENGTH, IPv4Network, ip_address, ip_network
+from ipaddress import IPV4LENGTH, IPV6LENGTH, IPv4Network, IPv6Address, IPv6Network
 from typing import Dict, List, Optional, Tuple
 
-from text_unidecode import unidecode
-
+from ...decode import unidecode
 from ...utils.decorators import lowercase, slugify, slugify_unicode
 from ...utils.distribution import choices_distribution
 from .. import BaseProvider, ElementsType
@@ -20,39 +19,39 @@ class _IPv4Constants:
     """
 
     _network_classes: Dict[str, IPv4Network] = {
-        "a": ip_network("0.0.0.0/1"),
-        "b": ip_network("128.0.0.0/2"),
-        "c": ip_network("192.0.0.0/3"),
+        "a": IPv4Network("0.0.0.0/1"),
+        "b": IPv4Network("128.0.0.0/2"),
+        "c": IPv4Network("192.0.0.0/3"),
     }
 
     # Three common private networks from class A, B and CIDR
     # to generate private addresses from.
     _private_networks: List[IPv4Network] = [
-        ip_network("10.0.0.0/8"),
-        ip_network("172.16.0.0/12"),
-        ip_network("192.168.0.0/16"),
+        IPv4Network("10.0.0.0/8"),
+        IPv4Network("172.16.0.0/12"),
+        IPv4Network("192.168.0.0/16"),
     ]
 
     # List of networks from which IP addresses will never be generated,
     # includes other private IANA and reserved networks from
-    # ttps://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xhtml
+    # https://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xhtml
     _excluded_networks: List[IPv4Network] = [
-        ip_network("0.0.0.0/8"),
-        ip_network("100.64.0.0/10"),
-        ip_network("127.0.0.0/8"),  # loopback network
-        ip_network("169.254.0.0/16"),  # linklocal network
-        ip_network("192.0.0.0/24"),
-        ip_network("192.0.2.0/24"),
-        ip_network("192.31.196.0/24"),
-        ip_network("192.52.193.0/24"),
-        ip_network("192.88.99.0/24"),
-        ip_network("192.175.48.0/24"),
-        ip_network("198.18.0.0/15"),
-        ip_network("198.51.100.0/24"),
-        ip_network("203.0.113.0/24"),
-        ip_network("224.0.0.0/4"),  # multicast network
-        ip_network("240.0.0.0/4"),
-        ip_network("255.255.255.255/32"),
+        IPv4Network("0.0.0.0/8"),
+        IPv4Network("100.64.0.0/10"),
+        IPv4Network("127.0.0.0/8"),  # loopback network
+        IPv4Network("169.254.0.0/16"),  # linklocal network
+        IPv4Network("192.0.0.0/24"),
+        IPv4Network("192.0.2.0/24"),
+        IPv4Network("192.31.196.0/24"),
+        IPv4Network("192.52.193.0/24"),
+        IPv4Network("192.88.99.0/24"),
+        IPv4Network("192.175.48.0/24"),
+        IPv4Network("198.18.0.0/15"),
+        IPv4Network("198.51.100.0/24"),
+        IPv4Network("203.0.113.0/24"),
+        IPv4Network("224.0.0.0/4"),  # multicast network
+        IPv4Network("240.0.0.0/4"),
+        IPv4Network("255.255.255.255/32"),
     ]
 
 
@@ -155,7 +154,7 @@ class Provider(BaseProvider):
         "{{url}}{{uri_path}}/{{uri_page}}{{uri_extension}}",
     )
     image_placeholder_services: ElementsType = (
-        "https://www.lorempixel.com/{width}/{height}",
+        "https://picsum.photos/{width}/{height}",
         "https://dummyimage.com/{width}x{height}",
         "https://placekitten.com/{width}/{height}",
         "https://placeimg.com/{width}/{height}/any",
@@ -182,8 +181,8 @@ class Provider(BaseProvider):
         return email
 
     @lowercase
-    def safe_domain_name(self) -> str:
-        return self.random_element(self.safe_domain_names)
+    def safe_domain_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+        return self.random_element(self.safe_domain_names, min_length, max_length)
 
     @lowercase
     def safe_email(self) -> str:
@@ -198,8 +197,8 @@ class Provider(BaseProvider):
         return self.user_name() + "@" + self.domain_name()
 
     @lowercase
-    def free_email_domain(self) -> str:
-        return self.random_element(self.free_email_domains)
+    def free_email_domain(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+        return self.random_element(self.free_email_domains, min_length, max_length)
 
     @lowercase
     def ascii_email(self) -> str:
@@ -305,25 +304,25 @@ class Provider(BaseProvider):
 
         return domain + "." + tld
 
-    def tld(self) -> str:
-        return self.random_element(self.tlds)
+    def tld(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+        return self.random_element(self.tlds, min_length, max_length)
 
-    def http_method(self) -> str:
+    def http_method(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """Returns random HTTP method
         https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
 
         :rtype: str
         """
 
-        return self.random_element(self.http_methods)
+        return self.random_element(self.http_methods, min_length, max_length)
 
     def url(self, schemes: Optional[List[str]] = None) -> str:
         """
         :param schemes: a list of strings to use as schemes, one will chosen randomly.
-        If None, it will generate http and https urls.
-        Passing an empty list will result in schemeless url generation like "://domain.com".
+            If None, it will generate http and https urls.
+            Passing an empty list will result in schemeless url generation like "://domain.com".
+        :return: a random url string.
 
-        :returns: a random url string.
         """
         if schemes is None:
             schemes = ["http", "https"]
@@ -344,7 +343,7 @@ class Provider(BaseProvider):
             all_networks = [_IPv4Constants._network_classes[address_class]]  # type: ignore
         else:
             networks_attr = "_cached_all_networks"
-            all_networks = [ip_network("0.0.0.0/0")]
+            all_networks = [IPv4Network("0.0.0.0/0")]
 
         # Return cached network and weight data if available
         weights_attr = f"{networks_attr}_weights"
@@ -484,7 +483,7 @@ class Provider(BaseProvider):
                     subnet.max_prefixlen,
                 )
             )
-            address = str(ip_network(address, strict=False))
+            address = str(IPv4Network(address, strict=False))
 
         return address
 
@@ -531,13 +530,13 @@ class Provider(BaseProvider):
 
         return networks
 
-    def ipv4_network_class(self) -> str:
+    def ipv4_network_class(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
         Returns a IPv4 network class 'a', 'b' or 'c'.
 
         :returns: IPv4 network class
         """
-        return self.random_element("abc")
+        return self.random_element("abc", min_length, max_length)
 
     def ipv4(
         self,
@@ -585,10 +584,10 @@ class Provider(BaseProvider):
 
     def ipv6(self, network: bool = False) -> str:
         """Produce a random IPv6 address or network with a valid CIDR"""
-        address = str(ip_address(self.generator.random.randint(2 ** IPV4LENGTH, (2 ** IPV6LENGTH) - 1)))
+        address = str(IPv6Address(self.generator.random.randint(2**IPV4LENGTH, (2**IPV6LENGTH) - 1)))
         if network:
             address += "/" + str(self.generator.random.randint(0, IPV6LENGTH))
-            address = str(ip_network(address, strict=False))
+            address = str(IPv6Network(address, strict=False))
         return address
 
     def mac_address(self) -> str:
@@ -614,8 +613,8 @@ class Provider(BaseProvider):
 
         return self.random_int(min=0, max=65535)
 
-    def uri_page(self) -> str:
-        return self.random_element(self.uri_pages)
+    def uri_page(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+        return self.random_element(self.uri_pages, min_length, max_length)
 
     def uri_path(self, deep: Optional[int] = None) -> str:
         deep = deep if deep else self.generator.random.randint(1, 3)
@@ -623,8 +622,8 @@ class Provider(BaseProvider):
             self.random_elements(self.uri_paths, length=deep),
         )
 
-    def uri_extension(self) -> str:
-        return self.random_element(self.uri_extensions)
+    def uri_extension(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+        return self.random_element(self.uri_extensions, min_length, max_length)
 
     def uri(self) -> str:
         pattern: str = self.random_element(self.uri_formats)
@@ -637,14 +636,27 @@ class Provider(BaseProvider):
             value = self.generator.text(20)
         return value
 
-    def image_url(self, width: Optional[int] = None, height: Optional[int] = None) -> str:
+    def image_url(
+        self,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        placeholder_url: Optional[str] = None,
+    ) -> str:
         """
         Returns URL to placeholder image
         Example: http://placehold.it/640x480
+
+        :param width: Optional image width
+        :param height: Optional image height
+        :param placeholder_url: Optional template string of image URLs from custom
+            placeholder service. String must contain ``{width}`` and ``{height}``
+            placeholders, eg: ``https:/example.com/{width}/{height}``.
+        :rtype: str
         """
         width_ = width or self.random_int(max=1024)
         height_ = height or self.random_int(max=1024)
-        placeholder_url: str = self.random_element(self.image_placeholder_services)
+        if placeholder_url is None:
+            placeholder_url = self.random_element(self.image_placeholder_services)
         return placeholder_url.format(width=width_, height=height_)
 
     def iana_id(self) -> str:

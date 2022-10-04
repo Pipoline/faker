@@ -1,3 +1,5 @@
+from typing import Optional
+
 from .. import Provider as AddressProvider
 
 
@@ -1554,40 +1556,40 @@ class Provider(AddressProvider):
         "do Sobreirinho",
     )
 
-    def street_prefix(self) -> str:
+    def street_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'Rua'
+        :example: 'Rua'
         """
-        return self.random_element(self.street_prefixes)
+        return self.random_element(self.street_prefixes, min_length, max_length)
 
-    def city_name(self) -> str:
+    def city_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'Amora'
+        :example: 'Amora'
         """
-        return self.random_element(self.cities)
+        return self.random_element(self.cities, min_length, max_length)
 
-    def administrative_unit(self) -> str:
+    def administrative_unit(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'Bragança'
+        :example: 'Bragança'
         """
-        return self.random_element(self.distritos)
+        return self.random_element(self.distritos, min_length, max_length)
 
     distrito = administrative_unit
 
-    def concelho(self) -> str:
+    def concelho(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'Tondela'
+        :example: 'Tondela'
         """
-        return self.random_element(self.concelhos)
+        return self.random_element(self.concelhos, min_length, max_length)
 
-    def freguesia(self) -> str:
+    def freguesia(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'Miranda do Douro'
+        :example: 'Miranda do Douro'
         """
-        return self.random_element(self.freguesias)
+        return self.random_element(self.freguesias, min_length, max_length)
 
-    def place_name(self) -> str:
+    def place_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example "do Pombal"
+        :example: "do Pombal"
         """
-        return self.random_element(self.places)
+        return self.random_element(self.places, min_length, max_length)

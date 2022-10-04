@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 from .. import Provider as CompanyProvider
 
@@ -66,27 +66,27 @@ class Provider(CompanyProvider):
 
     siren_format = "### ### ###"
 
-    def catch_phrase_noun(self) -> str:
+    def catch_phrase_noun(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
         Returns a random catch phrase noun.
         """
-        return self.random_element(self.nouns)
+        return self.random_element(self.nouns, min_length, max_length)
 
-    def catch_phrase_attribute(self) -> str:
+    def catch_phrase_attribute(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
         Returns a random catch phrase attribute.
         """
-        return self.random_element(self.attributes)
+        return self.random_element(self.attributes, min_length, max_length)
 
-    def catch_phrase_verb(self) -> str:
+    def catch_phrase_verb(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
         Returns a random catch phrase verb.
         """
-        return self.random_element(self.verbs)
+        return self.random_element(self.verbs, min_length, max_length)
 
     def catch_phrase(self) -> str:
         """
-        :example 'integrate extensible convergence'
+        :example: 'integrate extensible convergence'
         """
         catch_phrase = ""
         while True:
@@ -131,7 +131,7 @@ class Provider(CompanyProvider):
         It is in fact the result of the concatenation of a siren number (9 digits),
         a sequential number (4 digits) and a control number (1 digit) concatenation.
         If $max_sequential_digits is invalid, it is set to 2.
-        :param max_sequential_digits The maximum number of digits for the sequential number (> 0 && <= 4).
+        :param max_sequential_digits: The maximum number of digits for the sequential number (> 0 && <= 4).
         """
         if max_sequential_digits > 4 or max_sequential_digits <= 0:
             max_sequential_digits = 2

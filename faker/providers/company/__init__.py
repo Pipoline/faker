@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 from .. import BaseProvider, ElementsType
 
@@ -507,25 +507,25 @@ class Provider(BaseProvider):
 
     def company(self) -> str:
         """
-        :example 'Acme Ltd'
+        :example: 'Acme Ltd'
         """
         pattern: str = self.random_element(self.formats)
         return self.generator.parse(pattern)
 
-    def company_suffix(self) -> str:
+    def company_suffix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'Ltd'
+        :example: 'Ltd'
         """
-        return self.random_element(self.company_suffixes)
+        return self.random_element(self.company_suffixes, min_length, max_length)
 
     def catch_phrase(self) -> str:
         """
-        :example 'Robust full-range hub'
+        :example: 'Robust full-range hub'
         """
         return " ".join([self.random_element(word_list) for word_list in self.catch_phrase_words])
 
     def bs(self) -> str:
         """
-        :example 'integrate extensible convergence'
+        :example: 'integrate extensible convergence'
         """
         return " ".join([self.random_element(word_list) for word_list in self.bsWords])

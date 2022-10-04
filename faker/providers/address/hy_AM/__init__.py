@@ -601,27 +601,27 @@ class Provider(AddressProvider):
         "Սարիգյուղ",
     )
 
-    def city(self) -> str:
+    def city(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'Բյուրեղավան'
+        :example: 'Բյուրեղավան'
         """
-        return self.random_element(self.cities)
+        return self.random_element(self.cities, min_length, max_length)
 
-    def city_prefix(self) -> str:
+    def city_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'ք.'
+        :example: 'ք.'
         """
-        return self.random_element(self.city_prefixes)
+        return self.random_element(self.city_prefixes, min_length, max_length)
 
     def postcode(self) -> str:
         """
-        :example '3159'
+        :example: '3159'
         """
         return "%04d" % self.generator.random.randint(200, 4299)
 
     def postcode_in_state(self, state_abbr: Optional[str] = None) -> str:
         """
-        :example '4703'
+        :example: '4703'
         """
         if state_abbr is None:
             state_abbr = self.random_element(self.states_abbr)
@@ -644,44 +644,44 @@ class Provider(AddressProvider):
 
     def secondary_address(self) -> str:
         """
-        :example 'բն. 49'
+        :example: 'բն. 49'
         """
         return self.numerify(self.random_element(self.secondary_address_formats))
 
-    def administrative_unit(self) -> str:
+    def administrative_unit(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'Կոտայք'
+        :example: 'Կոտայք'
         """
-        return self.random_element(self.states)
+        return self.random_element(self.states, min_length, max_length)
 
     state = administrative_unit
 
-    def state_abbr(self) -> str:
+    def state_abbr(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'ՎՁ'
+        :example: 'ՎՁ'
         """
-        return self.random_element(self.states_abbr)
+        return self.random_element(self.states_abbr, min_length, max_length)
 
-    def street(self) -> str:
+    def street(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'Ոսկերիչների'
+        :example: 'Ոսկերիչների'
         """
-        return self.random_element(self.streets)
+        return self.random_element(self.streets, min_length, max_length)
 
-    def street_prefix(self) -> str:
+    def street_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'փողոց'
+        :example: 'փողոց'
         """
-        return self.random_element(self.street_prefixes)
+        return self.random_element(self.street_prefixes, min_length, max_length)
 
-    def village(self) -> str:
+    def village(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'Ոսկեվազ'
+        :example: 'Ոսկեվազ'
         """
-        return self.random_element(self.villages)
+        return self.random_element(self.villages, min_length, max_length)
 
-    def village_prefix(self) -> str:
+    def village_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'գ.'
+        :example: 'գ.'
         """
-        return self.random_element(self.village_prefixes)
+        return self.random_element(self.village_prefixes, min_length, max_length)

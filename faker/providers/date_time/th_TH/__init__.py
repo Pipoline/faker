@@ -290,13 +290,13 @@ class Provider(DateParseTypeProvider):
     ) -> str:
         """
         Get a date string between January 1, 1970 and now
-        :param pattern format
-        :param end_datetime datetime
-        :param thai_digit use Thai digit or not (default: False)
-        :param buddhist_era use Buddist era or not (default: True)
-        :example '08 พ.ย. 2563'
-        :example '๐๘ พ.ย. 2563' (thai_digit = True)
-        :example '8 พฤศิจกายน 2020' (pattern: str = "%-d %B %Y", buddhist_era = False)
+        :param pattern: format
+        :param end_datetime: datetime
+        :param thai_digit: use Thai digit or not (default: False)
+        :param buddhist_era: use Buddist era or not (default: True)
+        :example: '08 พ.ย. 2563'
+        :example: '๐๘ พ.ย. 2563' (thai_digit = True)
+        :example: '8 พฤศิจกายน 2020' (pattern: str = "%-d %B %Y", buddhist_era = False)
         """
         return thai_strftime(
             self.date_time(end_datetime=end_datetime),
@@ -313,11 +313,11 @@ class Provider(DateParseTypeProvider):
     ) -> str:
         """
         Get a time string (24h format by default)
-        :param pattern format
-        :param end_datetime datetime
-        :param thai_digit use Thai digit or not (default: False)
-        :example '15:02:34'
-        :example '๑๕:๐๒:๓๔' (thai_digit = True)
+        :param pattern: format
+        :param end_datetime: datetime
+        :param thai_digit: use Thai digit or not (default: False)
+        :example: '15:02:34'
+        :example: '๑๕:๐๒:๓๔' (thai_digit = True)
         """
         return thai_strftime(
             self.date_time(end_datetime=end_datetime),
@@ -325,16 +325,27 @@ class Provider(DateParseTypeProvider):
             thai_digit,
         )
 
-    def century(self, thai_digit: bool = False, buddhist_era: bool = True) -> str:
+    def century(
+        self,
+        min_length: Optional[int] = None,
+        max_length: Optional[int] = None,
+        thai_digit: bool = False,
+        buddhist_era: bool = True,
+    ) -> str:
         """
-        :param thai_digit use Thai digit or not (default: False)
-        :param buddhist_era use Buddist era or not (default: True)
-        :example '20'
+        :param min_length: minimum length of the century string (default: None)
+        :param max_length: maximum length of the century string (default: None)
+        :param thai_digit: use Thai digit or not (default: False)
+        :param buddhist_era: use Buddist era or not (default: True)
+        :example: '20'
         """
         end_century = 22
         if buddhist_era:
             end_century = 26
-        text = str(self.random_element(range(1, end_century)))
+
+        elements = [str(i) for i in range(1, end_century)]
+        text: str = self.random_element(elements, min_length, max_length)
+
         if thai_digit:
             text = text.translate(_HA_TH_DIGITS)
         return text

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from .. import Provider as AddressProvider
 
 
@@ -589,53 +591,53 @@ class Provider(AddressProvider):
         "コート",
     )
 
-    def administrative_unit(self) -> str:
+    def administrative_unit(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example '東京都'
+        :example: '東京都'
         """
-        return self.random_element(self.prefectures)
+        return self.random_element(self.prefectures, min_length, max_length)
 
     prefecture = administrative_unit
 
-    def city(self) -> str:
+    def city(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example '台東区'
+        :example: '台東区'
         """
-        return self.random_element(self.cities)
+        return self.random_element(self.cities, min_length, max_length)
 
-    def town(self) -> str:
+    def town(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example '浅草'
+        :example: '浅草'
         """
-        return self.random_element(self.towns)
+        return self.random_element(self.towns, min_length, max_length)
 
     def chome(self) -> str:
         """
-        :example '1丁目'
+        :example: '1丁目'
         """
         return "%d丁目" % self.generator.random.randint(1, 42)
 
     def ban(self) -> str:
         """
-        :example '3番'
+        :example: '3番'
         """
         return "%d番" % self.generator.random.randint(1, 27)
 
     def gou(self) -> str:
         """
-        :example '10号'
+        :example: '10号'
         """
         return "%d号" % self.generator.random.randint(1, 20)
 
-    def building_name(self) -> str:
+    def building_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'コーポ芝浦'
+        :example: 'コーポ芝浦'
         """
-        return self.random_element(self.building_names)
+        return self.random_element(self.building_names, min_length, max_length)
 
     def postcode(self) -> str:
         """
-        :example '101-1212'
+        :example: '101-1212'
         """
         return "%03d-%04d" % (
             self.generator.random.randint(0, 999),

@@ -2,7 +2,7 @@ import re
 import string
 
 from collections import OrderedDict
-from typing import Any, Dict, KeysView, List, Optional, Sequence, TypeVar, Union
+from typing import Any, Collection, List, Optional, Sequence, TypeVar, Union
 
 from ..generator import Generator
 from ..utils.distribution import choices_distribution, choices_distribution_unique
@@ -15,7 +15,7 @@ _re_qm = re.compile(r"\?")
 _re_cir = re.compile(r"\^")
 
 T = TypeVar("T")
-ElementsType = Union[Sequence[T], Dict[T, float], KeysView[T]]
+ElementsType = Collection[T]
 
 
 class BaseProvider:
@@ -287,10 +287,8 @@ class BaseProvider:
         self.generator = generator
 
     def locale(self) -> str:
-        """Generate a random underscored i18n locale code (e.g. en_US).
+        """Generate a random underscored i18n locale code (e.g. en_US)."""
 
-        :sample:
-        """
         language_code = self.language_code()
         return (
             language_code
@@ -300,12 +298,10 @@ class BaseProvider:
             )
         )
 
-    def language_code(self) -> str:
-        """Generate a random i18n language code (e.g. en).
+    def language_code(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+        """Generate a random i18n language code (e.g. en)."""
 
-        :sample:
-        """
-        return self.random_element(BaseProvider.language_locale_codes.keys())
+        return self.random_element(BaseProvider.language_locale_codes.keys(), min_length, max_length)
 
     def random_int(self, min: int = 0, max: int = 9999, step: int = 1) -> int:
         """Generate a random integer between two integers ``min`` and ``max`` inclusive
@@ -314,24 +310,19 @@ class BaseProvider:
         This method is functionally equivalent to randomly sampling an integer
         from the sequence ``range(min, max + 1, step)``.
 
-        :sample:
-        :sample size=10: min=0, max=15
-        :sample size=10: min=0, max=15, step=3
+        :sample: min=0, max=15
+        :sample: min=0, max=15, step=3
         """
         return self.generator.random.randrange(min, max + 1, step)
 
     def random_digit(self) -> int:
-        """Generate a random digit (0 to 9).
+        """Generate a random digit (0 to 9)."""
 
-        :sample:
-        """
         return self.generator.random.randint(0, 9)
 
     def random_digit_not_null(self) -> int:
-        """Generate a random non-zero digit (1 to 9).
+        """Generate a random non-zero digit (1 to 9)."""
 
-        :sample:
-        """
         return self.generator.random.randint(1, 9)
 
     def random_digit_or_empty(self) -> Union[int, str]:
@@ -339,9 +330,8 @@ class BaseProvider:
 
         This method will return an empty string 50% of the time,
         and each digit has a 1/20 chance of being generated.
-
-        :sample size=10:
         """
+
         if self.generator.random.randint(0, 1):
             return self.generator.random.randint(0, 9)
         else:
@@ -352,9 +342,8 @@ class BaseProvider:
 
         This method will return an empty string 50% of the time,
         and each digit has a 1/18 chance of being generated.
-
-        :sample size=10:
         """
+
         if self.generator.random.randint(0, 1):
             return self.generator.random.randint(1, 9)
         else:
@@ -389,16 +378,13 @@ class BaseProvider:
             return self.generator.random.randint(0, pow(10, digits) - 1)
 
     def random_letter(self) -> str:
-        """Generate a random ASCII letter (a-z and A-Z).
+        """Generate a random ASCII letter (a-z and A-Z)."""
 
-        :sample:
-        """
         return self.generator.random.choice(getattr(string, "letters", string.ascii_letters))
 
     def random_letters(self, length: int = 16) -> Sequence[str]:
         """Generate a list of random ASCII letters (a-z and A-Z) of the specified ``length``.
 
-        :sample:
         :sample: length=10
         """
         return self.random_choices(
@@ -407,17 +393,13 @@ class BaseProvider:
         )
 
     def random_lowercase_letter(self) -> str:
-        """Generate a random lowercase ASCII letter (a-z).
+        """Generate a random lowercase ASCII letter (a-z)."""
 
-        :sample:
-        """
         return self.generator.random.choice(string.ascii_lowercase)
 
     def random_uppercase_letter(self) -> str:
-        """Generate a random uppercase ASCII letter (A-Z).
+        """Generate a random uppercase ASCII letter (A-Z)."""
 
-        :sample:
-        """
         return self.generator.random.choice(string.ascii_uppercase)
 
     def random_elements(
@@ -426,8 +408,13 @@ class BaseProvider:
         length: Optional[int] = None,
         unique: bool = False,
         use_weighting: Optional[bool] = None,
+        min_element_length: Optional[int] = None,
+        max_element_length: Optional[int] = None,
     ) -> Sequence[T]:
         """Generate a list of randomly sampled objects from ``elements``.
+        ``max_element_length`` sets the maximal length of an individual element in ``elements``.
+        ``min_element_length`` sets the minimal length of an individual element in ``elements``.
+        All elements which do not meet these criteria will be ignored at the random selection.
 
         Set ``unique`` to ``False`` for random sampling with replacement, and set ``unique`` to
         ``True`` for random sampling without replacement.
@@ -482,10 +469,14 @@ class BaseProvider:
                        ("d", 0.05),
                    ]), unique=True
         """
-        use_weighting = use_weighting if use_weighting is not None else self.__use_weighting__
-
         if isinstance(elements, dict) and not isinstance(elements, OrderedDict):
             raise ValueError("Use OrderedDict only to avoid dependency on PYTHONHASHSEED (See #363).")
+
+        # Check for max and min
+        if max_element_length or min_element_length:
+            elements = self.filter_by_length(elements, max_element_length, min_element_length)
+
+        use_weighting = use_weighting if use_weighting is not None else self.__use_weighting__
 
         fn = choices_distribution_unique if unique else choices_distribution
 
@@ -515,6 +506,42 @@ class BaseProvider:
             length=length,
         )
 
+    @staticmethod
+    def filter_by_length(
+        elements: ElementsType = ("a", "b", "c"),
+        max_element_length: Optional[int] = None,
+        min_element_length: Optional[int] = None,
+    ) -> ElementsType:
+        """Filters for elements in ``elements`` that satisfy the given length constraints.
+        ``max_element_length`` sets the maximal length of an individual element in ``elements``.
+        ``min_element_length`` sets the minimal length of an individual element in ``elements``."""
+
+        appropriate_elements = []
+        min_element_length = min_element_length or 0
+
+        if min_element_length and max_element_length:
+            for element in elements:
+                if min_element_length <= len(element) <= max_element_length:
+                    appropriate_elements.append(element)
+        elif min_element_length:
+            for element in elements:
+                if len(element) >= min_element_length:
+                    appropriate_elements.append(element)
+        elif max_element_length:
+            for element in elements:
+                if len(element) <= max_element_length:
+                    appropriate_elements.append(element)
+
+        if not appropriate_elements:
+            error_message = (
+                f"No elements found that satisfy the given length constraints of {min_element_length} <= length"
+            )
+            if max_element_length:
+                error_message += f" <= {max_element_length}"
+            raise ValueError(error_message)
+
+        return appropriate_elements
+
     def random_choices(self, elements: ElementsType = ("a", "b", "c"), length: Optional[int] = None) -> Sequence[T]:
         """Generate a list of objects randomly sampled from ``elements`` with replacement.
 
@@ -539,7 +566,12 @@ class BaseProvider:
         """
         return self.random_elements(elements, length, unique=False)
 
-    def random_element(self, elements: ElementsType = ("a", "b", "c")) -> T:
+    def random_element(
+        self,
+        elements: ElementsType = ("a", "b", "c"),
+        min_element_length: Optional[int] = None,
+        max_element_length: Optional[int] = None,
+    ) -> T:
         """Generate a randomly sampled object from ``elements``.
 
         For information on the ``elements`` argument, please refer to
@@ -555,8 +587,12 @@ class BaseProvider:
                      ("d", 0.05),
                  ])
         """
-
-        return self.random_elements(elements, length=1)[0]
+        return self.random_elements(
+            elements,
+            length=1,
+            min_element_length=min_element_length,
+            max_element_length=max_element_length,
+        )[0]
 
     def random_sample(self, elements: ElementsType = ("a", "b", "c"), length: Optional[int] = None) -> Sequence[T]:
         """Generate a list of objects randomly sampled from ``elements`` without replacement.
@@ -727,9 +763,9 @@ class DynamicProvider(BaseProvider):
         """Add new element."""
         self.elements.append(element)
 
-    def get_random_value(self) -> Any:
+    def get_random_value(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> Any:
 
         if not self.elements or len(self.elements) == 0:
             raise ValueError("Elements should be a list of values the provider samples from")
 
-        return self.random_element(self.elements)
+        return self.random_element(self.elements, min_length, max_length)

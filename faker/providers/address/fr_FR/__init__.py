@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 from .. import Provider as AddressProvider
 
@@ -426,37 +426,37 @@ class Provider(AddressProvider):
         ("976", "Mayotte"),
     )
 
-    def street_prefix(self) -> str:
+    def street_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'rue'
+        :example: 'rue'
         """
-        return self.random_element(self.street_prefixes)
+        return self.random_element(self.street_prefixes, min_length, max_length)
 
-    def city_prefix(self) -> str:
+    def city_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'rue'
+        :example: 'rue'
         """
-        return self.random_element(self.city_prefixes)
+        return self.random_element(self.city_prefixes, min_length, max_length)
 
-    def administrative_unit(self) -> str:
+    def administrative_unit(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        :example 'Guadeloupe'
+        :example: 'Guadeloupe'
         """
-        return self.random_element(self.regions)
+        return self.random_element(self.regions, min_length, max_length)
 
     region = administrative_unit
 
-    def department(self) -> Tuple[str, str]:
+    def department(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> Tuple[str, str]:
         """
         Randomly returns a french department ('departmentNumber' , 'departmentName').
-        :example ('2B' . 'Haute-Corse')
+        :example: ('2B' . 'Haute-Corse')
         """
-        return self.random_element(self.departments)
+        return self.random_element(self.departments, min_length, max_length)
 
     def department_name(self) -> str:
         """
         Randomly returns a french department name.
-        :example 'Ardèche'
+        :example: 'Ardèche'
         """
         return self.department()[1]
 
@@ -464,6 +464,6 @@ class Provider(AddressProvider):
         """
         Randomly returns a french department number.
 
-        :example '59'
+        :example: '59'
         """
         return self.department()[0]

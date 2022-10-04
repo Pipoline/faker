@@ -4,14 +4,18 @@ import unittest
 
 from unittest import mock
 
+import pytest
+
 from faker import Faker
 from faker.providers.person.ar_AA import Provider as ArProvider
+from faker.providers.person.az_AZ import Provider as AzAzProvider
 from faker.providers.person.cs_CZ import Provider as CsCZProvider
 from faker.providers.person.en import Provider as EnProvider
 from faker.providers.person.en_IE import Provider as EnIEProvider
 from faker.providers.person.en_IN import Provider as EnINProvider
 from faker.providers.person.en_US import Provider as EnUSProvider
-from faker.providers.person.es_ES import Provider as EsESProvider
+from faker.providers.person.es import Provider as EsProvider
+from faker.providers.person.es_CO import Provider as EsCOProvider
 from faker.providers.person.fi_FI import Provider as FiProvider
 from faker.providers.person.ga_IE import Provider as GaIEProvider
 from faker.providers.person.he_IL import Provider as HeILProvider
@@ -28,6 +32,207 @@ from faker.providers.person.ta_IN import Provider as TaINProvider
 from faker.providers.person.th_TH import Provider as ThThProvider
 from faker.providers.person.zh_CN import Provider as ZhCNProvider
 from faker.providers.person.zh_TW import Provider as ZhTWProvider
+
+
+class TestMinMax(unittest.TestCase):
+    """Tests the min_length and min_length functionality"""
+
+    def setUp(self):
+        self.fake = Faker("en_US")
+        Faker.seed(0)
+
+    @staticmethod
+    def get_min_and_max(max_length, min_range):
+        """Generating test values to test min_length and max_length
+        ``max_length`` the upper limit of the test data
+        ``min_size`` the minimal range of an example data(e.b. at min_range=3: 3;6)
+        """
+        for offset in range(max_length):
+            for block_size in range(max_length - offset - min_range + 1):
+                block_size += min_range + offset
+
+                yield offset, block_size
+
+    def test_first_name(self):
+        for min_, max_ in self.get_min_and_max(10, 3):
+            first_name = self.fake.first_name(min_, max_)
+            assert isinstance(first_name, str)
+            assert min_ <= len(first_name) <= max_
+
+    def test_first_name_min_length(self):
+        for min_ in range(0, 5):
+            first_name = self.fake.first_name(min_)
+            assert isinstance(first_name, str)
+            assert min_ <= len(first_name)
+
+    def test_first_name_as_list(self):
+        first_name_as_list = self.fake.first_name_as_list()
+        assert first_name_as_list is EnUSProvider.first_names
+
+    def test_last_name(self):
+        for min_, max_ in self.get_min_and_max(10, 3):
+            last_name = self.fake.last_name(min_, max_)
+            assert isinstance(last_name, str)
+            assert min_ <= len(last_name) <= max_
+
+    def test_last_name_as_list(self):
+        last_name_as_list = self.fake.last_name_as_list()
+        assert last_name_as_list is EnUSProvider.last_names
+
+    def test_first_name_male(self):
+        for min_, max_ in self.get_min_and_max(10, 3):
+            first_name_male = self.fake.first_name_male(min_, max_)
+            assert isinstance(first_name_male, str)
+            assert min_ <= len(first_name_male) <= max_
+
+    def test_first_name_male_as_list(self):
+        first_name_male_as_list = self.fake.first_name_male_as_list()
+        assert first_name_male_as_list is EnUSProvider.first_names_male
+
+    def test_first_name_nonbinary(self):
+        for min_, max_ in self.get_min_and_max(10, 3):
+            first_name_nonbinary = self.fake.first_name_nonbinary(min_, max_)
+            assert isinstance(first_name_nonbinary, str)
+            assert min_ <= len(first_name_nonbinary) <= max_
+
+    def test_first_name_nonbinary_as_list(self):
+        first_name_nonbinary_as_list = self.fake.first_name_nonbinary_as_list()
+        assert first_name_nonbinary_as_list is EnUSProvider.first_names_nonbinary
+
+    def test_first_name_female(self):
+        for min_, max_ in self.get_min_and_max(10, 3):
+            first_name_female = self.fake.first_name_female(min_, max_)
+            assert isinstance(first_name_female, str)
+            assert min_ <= len(first_name_female) <= max_
+
+    def test_first_name_female_as_list(self):
+        first_name_female_as_list = self.fake.first_name_female_as_list()
+        assert first_name_female_as_list is EnUSProvider.first_names_female
+
+    def test_last_name_male(self):
+        for min_, max_ in self.get_min_and_max(10, 3):
+            last_name_male = self.fake.last_name_male(min_, max_)
+            assert isinstance(last_name_male, str)
+            assert min_ <= len(last_name_male) <= max_
+
+    def test_last_name_male_as_list(self):
+        last_name_male_as_list = self.fake.last_name_male_as_list()
+        assert set(tuple(last_name_male_as_list)).intersection(EnUSProvider.last_names) != set()
+
+    def test_last_name_nonbinary(self):
+        for min_, max_ in self.get_min_and_max(10, 3):
+            last_name_nonbinary = self.fake.last_name_nonbinary(min_, max_)
+            assert isinstance(last_name_nonbinary, str)
+            assert min_ <= len(last_name_nonbinary) <= max_
+
+    def test_last_name_nonbinary_as_list(self):
+        last_name_nonbinary_as_list = self.fake.last_name_nonbinary_as_list()
+        assert set(tuple(last_name_nonbinary_as_list)).intersection(EnUSProvider.last_names) != set()
+
+    def test_last_name_female(self):
+        for min_, max_ in self.get_min_and_max(10, 3):
+            last_name_female = self.fake.last_name_female(min_, max_)
+            assert isinstance(last_name_female, str)
+            assert min_ <= len(last_name_female) <= max_
+
+    def test_last_name_female_as_list(self):
+        last_name_female_as_list = self.fake.last_name_female_as_list()
+        assert set(tuple(last_name_female_as_list)).intersection(EnUSProvider.last_names) != set()
+
+    def test_prefix(self):
+        for min_, max_ in self.get_min_and_max(4, 3):
+            prefix = self.fake.prefix(min_, max_)
+            assert isinstance(prefix, str)
+            assert min_ <= len(prefix) <= max_
+
+    def test_prefix_as_list(self):
+        prefix_as_list = self.fake.prefix_as_list()
+        assert set(tuple(EnUSProvider.prefixes_male)).intersection(prefix_as_list) != set()
+        assert set(tuple(EnUSProvider.prefixes_nonbinary)).intersection(prefix_as_list) != set()
+        assert set(tuple(EnUSProvider.prefixes_female)).intersection(prefix_as_list) != set()
+
+    def test_prefix_male(self):
+        for min_, max_ in self.get_min_and_max(3, 3):
+            prefix_male = self.fake.prefix_male(min_, max_)
+            assert isinstance(prefix_male, str)
+            assert min_ <= len(prefix_male) <= max_
+
+    def test_prefix_male_as_list(self):
+        prefix_male_as_list = self.fake.prefix_male_as_list()
+        assert prefix_male_as_list is EnUSProvider.prefixes_male
+
+    def test_prefix_nonbinary(self):
+        for min_, max_ in self.get_min_and_max(4, 3):
+            prefix_nonbinary = self.fake.prefix_nonbinary(min_, max_)
+            assert isinstance(prefix_nonbinary, str)
+            assert min_ <= len(prefix_nonbinary) <= max_
+
+    def test_prefix_nonbinary_as_list(self):
+        prefix_nonbinary_as_list = self.fake.prefix_nonbinary_as_list()
+        assert prefix_nonbinary_as_list is EnUSProvider.prefixes_nonbinary
+
+    def test_prefix_female(self):
+        for min_, max_ in self.get_min_and_max(4, 3):
+            prefix_female = self.fake.prefix_female(min_, max_)
+            assert isinstance(prefix_female, str)
+            assert min_ <= len(prefix_female) <= max_
+
+    def test_prefix_female_as_list(self):
+        prefix_female_as_list = self.fake.prefix_female_as_list()
+        assert prefix_female_as_list is EnUSProvider.prefixes_female
+
+    def test_suffix(self):
+        for min_, max_ in self.get_min_and_max(4, 1):
+            suffix = self.fake.suffix(min_, max_)
+            assert isinstance(suffix, str)
+            assert min_ <= len(suffix) <= max_
+
+    def test_suffix_as_list(self):
+        suffix_as_list = self.fake.suffix_as_list()
+        assert set(tuple(EnUSProvider.suffixes_male)).intersection(suffix_as_list) != set()
+        assert set(tuple(EnUSProvider.suffixes_nonbinary)).intersection(suffix_as_list) != set()
+        assert set(tuple(EnUSProvider.suffixes_female)).intersection(suffix_as_list) != set()
+
+    def test_suffix_male(self):
+        for min_, max_ in self.get_min_and_max(3, 2):
+            suffix_male = self.fake.suffix_male(min_, max_)
+            assert isinstance(suffix_male, str)
+            assert min_ <= len(suffix_male) <= max_
+
+    def test_suffix_male_as_list(self):
+        suffix_male_as_list = self.fake.suffix_male_as_list()
+        assert suffix_male_as_list is EnUSProvider.suffixes_male
+
+    def test_suffix_nonbinary(self):
+        for min_, max_ in self.get_min_and_max(4, 2):
+            suffix_nonbinary = self.fake.suffix_nonbinary(min_, max_)
+            assert isinstance(suffix_nonbinary, str)
+            assert min_ <= len(suffix_nonbinary) <= max_
+
+    def test_suffix_nonbinary_as_list(self):
+        suffix_nonbinary_as_list = self.fake.suffix_nonbinary_as_list()
+        assert suffix_nonbinary_as_list is EnUSProvider.suffixes_nonbinary
+
+    def test_suffix_female(self):
+        for min_, max_ in self.get_min_and_max(3, 2):
+            suffix_female = self.fake.suffix_female(min_, max_)
+            assert isinstance(suffix_female, str)
+            assert min_ <= len(suffix_female) <= max_
+
+    def test_suffix_female_as_list(self):
+        suffix_female_as_list = self.fake.suffix_female_as_list()
+        assert suffix_female_as_list is EnUSProvider.suffixes_female
+
+    def test_language_name(self):
+        for min_, max_ in self.get_min_and_max(15, 3):
+            language_name = self.fake.language_name(min_, max_)
+            assert isinstance(language_name, str)
+            assert min_ <= len(language_name) <= max_
+
+    def test_no_appropriate_elements(self):
+        max_language_name_length = max(map(len, EnUSProvider.language_names))
+        with pytest.raises(ValueError):
+            self.fake.language_name(max_language_name_length + 1, max_language_name_length + 2)
 
 
 class TestAr(unittest.TestCase):
@@ -84,6 +289,66 @@ class TestAr(unittest.TestCase):
         self.assertIsInstance(name, str)
         assert name in ArProvider.last_names
         assert name in ArProvider.last_names
+
+
+class TestAzAz(unittest.TestCase):
+    """Tests for az_AZ locale person provider"""
+
+    def setUp(self):
+        self.fake = Faker("az")
+        Faker.seed(0)
+
+    def test_first_name(self):
+        # General first name
+        name = self.fake.first_name()
+        assert name
+        self.assertIsInstance(name, str)
+        assert name in AzAzProvider.first_names
+
+        # Females first name
+        name = self.fake.first_name_female()
+        assert name
+        self.assertIsInstance(name, str)
+        assert name in AzAzProvider.first_names
+        assert name in AzAzProvider.first_names_female
+
+        # Male first name
+        name = self.fake.first_name_male()
+        assert name
+        self.assertIsInstance(name, str)
+        assert name in AzAzProvider.first_names
+        assert name in AzAzProvider.first_names_male
+
+    def test_last_name(self):
+        # General last name.
+        name = self.fake.last_name()
+        assert name
+        self.assertIsInstance(name, str)
+        assert name in AzAzProvider.last_names
+
+        # Females last name.
+        name = self.fake.last_name_female()
+        assert name
+        self.assertIsInstance(name, str)
+        assert name in AzAzProvider.last_names_female + AzAzProvider.last_names_unisex
+
+        # Females only last name.
+        name = self.fake.last_name_unique_to_female()
+        assert name
+        self.assertIsInstance(name, str)
+        assert name in AzAzProvider.last_names_female
+
+        # Male last name.
+        name = self.fake.last_name_male()
+        assert name
+        self.assertIsInstance(name, str)
+        assert name in AzAzProvider.last_names_male + AzAzProvider.last_names_unisex
+
+        # Male only last name.
+        name = self.fake.last_name_unique_to_male()
+        assert name
+        self.assertIsInstance(name, str)
+        assert name in AzAzProvider.last_names_male
 
 
 class TestJaJP(unittest.TestCase):
@@ -689,16 +954,69 @@ class TestRuRU(unittest.TestCase):
         assert language_name in RuProvider.language_names
 
 
-class TestEsES(unittest.TestCase):
-    """Tests person in the es_ES locale."""
+class TestEs(unittest.TestCase):
+    """Tests person in the es locale."""
 
     def setUp(self):
-        self.fake = Faker("es_ES")
+        self.fake = Faker("es")
         Faker.seed(0)
 
     def test_language_name(self):
         language_name = self.fake.language_name()
-        assert language_name in EsESProvider.language_names
+        assert language_name in EsProvider.language_names
+
+
+class TestEsCO(unittest.TestCase):
+    """Tests person in the es_CO locale"""
+
+    def setUp(self):
+        self.fake = Faker("es_CO")
+        Faker.seed(0)
+
+    def test_first_names(self):
+        # General first name
+        name = self.fake.first_name()
+        self.assertIsInstance(name, str)
+        assert name in EsCOProvider.first_names
+
+        # Female first name
+        name = self.fake.first_name_female()
+        self.assertIsInstance(name, str)
+        assert name in EsCOProvider.first_names
+        assert name in EsCOProvider.first_names_female
+
+        # Male first name
+        name = self.fake.first_name_male()
+        self.assertIsInstance(name, str)
+        assert name in EsCOProvider.first_names
+        assert name in EsCOProvider.first_names_male
+
+    def test_last_names(self):
+        # General last name
+        name = self.fake.last_name()
+        self.assertIsInstance(name, str)
+        assert name in EsCOProvider.last_names
+
+        # Female last name
+        name = self.fake.last_name_female()
+        self.assertIsInstance(name, str)
+        assert name in EsCOProvider.last_names
+
+        # Male last name
+        name = self.fake.last_name_male()
+        self.assertIsInstance(name, str)
+        assert name in EsCOProvider.last_names
+
+    def test_prefix(self):
+        # Female prefix
+        prefix = self.fake.prefix_female()
+        self.assertIsInstance(prefix, str)
+        assert prefix in EsCOProvider.prefixes_female
+
+        # Male prefix
+        prefix = self.fake.prefix_male()
+        self.assertIsInstance(prefix, str)
+        assert prefix in EsCOProvider.prefixes_male
 
 
 class TestHeIL(unittest.TestCase):

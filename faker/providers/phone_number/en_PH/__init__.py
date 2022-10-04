@@ -1,4 +1,4 @@
-from typing import Sequence, Tuple
+from typing import Optional, Sequence, Tuple
 
 from ... import BaseProvider
 
@@ -14,22 +14,22 @@ class Provider(BaseProvider):
     provider methods are there to enable the creation of more "realistic" fake data for such cases.
 
     Additional Notes:
-    - The Philippine telecommunication industry is dominated by the Globe-PLDT duopoly. Globe offers landline services
-      under the Globe brand and mobile services under the Globe and TM brands. PLDT offers landline services under the
-      PLDT brand, and its subsidiaries offer mobile services under the Smart, TNT, and SUN brands. The rest of the
-      industry is shared by smaller players, and Bayantel is one of the more well-known players that provide landline
-      services.
-    - Globe mobile prefixes include both Globe and TM brands, and the Smart mobile prefixes include both Smart and TNT
-      brands but not the SUN brand. Available sources only split the prefixes this way.
-    - In October 2019, Area 2 landline numbers were migrated to an 8 digit scheme, while the rest of the country still
-      uses the original 7 digit scheme. Area 2 is comprised of the whole National Capital Region (aka Metro Manila) and
-      parts of surrounding provinces, and within this area, the service provider's identifier is included in every 8
-      digit landline number.
+        - The Philippine telecommunication industry is dominated by the Globe-PLDT duopoly. Globe offers landline
+          services under the Globe brand and mobile services under the Globe and TM brands. PLDT offers landline
+          services under the PLDT brand, and its subsidiaries offer mobile services under the Smart, TNT, and SUN
+          brands. The rest of the industry is shared by smaller players, and Bayantel is one of the more well-known
+          players that provide landline services.
+        - Globe mobile prefixes include both Globe and TM brands, and the Smart mobile prefixes include both Smart
+          and TNT brands but not the SUN brand. Available sources only split the prefixes this way.
+        - In October 2019, Area 2 landline numbers were migrated to an 8 digit scheme, while the rest of the
+          country still uses the original 7 digit scheme. Area 2 is comprised of the whole National Capital
+          Region (aka Metro Manila) and parts of surrounding provinces, and within this area, the service
+          provider's identifier is included in every 8 digit landline number.
 
     Sources:
-    - https://en.wikipedia.org/wiki/Telephone_numbers_in_the_Philippines
-    - https://www.prefix.ph/prefixes/2019-updated-complete-list-of-philippine-mobile-network-prefixes/
-    - https://powerpinoys.com/network-prefixes-philippines/
+        - https://en.wikipedia.org/wiki/Telephone_numbers_in_the_Philippines
+        - https://www.prefix.ph/prefixes/2019-updated-complete-list-of-philippine-mobile-network-prefixes/
+        - https://powerpinoys.com/network-prefixes-philippines/
     """
 
     globe_mobile_number_prefixes: Tuple[str, ...] = (
@@ -200,23 +200,23 @@ class Provider(BaseProvider):
         pattern: str = self.random_element(formats)
         return self.numerify(self.generator.parse(pattern))
 
-    def globe_mobile_number_prefix(self) -> str:
-        return self.random_element(self.globe_mobile_number_prefixes)
+    def globe_mobile_number_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+        return self.random_element(self.globe_mobile_number_prefixes, min_length, max_length)
 
-    def smart_mobile_number_prefix(self) -> str:
-        return self.random_element(self.smart_mobile_number_prefixes)
+    def smart_mobile_number_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+        return self.random_element(self.smart_mobile_number_prefixes, min_length, max_length)
 
-    def sun_mobile_number_prefix(self) -> str:
-        return self.random_element(self.sun_mobile_number_prefixes)
+    def sun_mobile_number_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+        return self.random_element(self.sun_mobile_number_prefixes, min_length, max_length)
 
-    def bayantel_landline_identifier(self) -> str:
-        return self.random_element(self.bayantel_landline_identifiers)
+    def bayantel_landline_identifier(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+        return self.random_element(self.bayantel_landline_identifiers, min_length, max_length)
 
-    def misc_landline_identifier(self) -> str:
-        return self.random_element(self.misc_landline_identifiers)
+    def misc_landline_identifier(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+        return self.random_element(self.misc_landline_identifiers, min_length, max_length)
 
-    def non_area2_landline_area_code(self) -> str:
-        return self.random_element(self.non_area2_landline_area_codes)
+    def non_area2_landline_area_code(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+        return self.random_element(self.non_area2_landline_area_codes, min_length, max_length)
 
     def globe_mobile_number(self) -> str:
         return self._create_phone_number(self.globe_mobile_number_formats)

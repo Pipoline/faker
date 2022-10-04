@@ -1,6 +1,8 @@
 from faker.providers.job import Provider as JobProvider
+from faker.providers.job.az_AZ import Provider as AzAzJobProvider
 from faker.providers.job.de_DE import Provider as DeDeJobProvider
 from faker.providers.job.el_GR import Provider as ElGrJobProvider
+from faker.providers.job.es_ES import Provider as EsEsJobProvider
 from faker.providers.job.fr_FR import Provider as FrFrJobProvider
 from faker.providers.job.hu_HU import Provider as HuHuJobProvider
 from faker.providers.job.hy_AM import Provider as HyAmJobProvider
@@ -20,6 +22,14 @@ class TestJobProvider:
     def test_job(self, faker, num_samples):
         for _ in range(num_samples):
             assert faker.job() in JobProvider.jobs
+
+
+class TestAzAz:
+    """Test az_AZ job provider"""
+
+    def test_job(self, faker, num_samples):
+        for _ in range(num_samples):
+            assert faker.job() in AzAzJobProvider.jobs
 
 
 class TestJaJp:
@@ -76,6 +86,14 @@ class TestElGr:
     def test_job(self, faker, num_samples):
         for _ in range(num_samples):
             assert faker.job() in ElGrJobProvider.jobs
+
+
+class TestEsEs:
+    """Test es job provider"""
+
+    def test_job(self, faker, num_samples):
+        for _ in range(num_samples):
+            assert faker.job() in EsEsJobProvider.jobs
 
 
 class TestPtPt:

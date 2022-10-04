@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from operator import itemgetter
-from typing import Tuple
+from typing import Optional, Tuple
 
 from .. import Provider as PersonProvider
 
@@ -160,140 +160,162 @@ class Provider(PersonProvider):
 
     romanized_formats = romanized_formats_male + romanized_formats_female
 
-    def first_name_pair(self) -> Tuple[str, str, str]:
+    def first_name_pair(
+        self, min_length: Optional[int] = None, max_length: Optional[int] = None
+    ) -> Tuple[str, str, str]:
         """
-        @example ('明美', 'アケミ', 'Akemi')
+        :example: ('明美', 'アケミ', 'Akemi')
         """
-        return self.random_element(self.first_name_pairs)
+        return self.random_element(self.first_name_pairs, min_length, max_length)
 
-    def first_name_male_pair(self) -> Tuple[str, str, str]:
+    def first_name_male_pair(
+        self, min_length: Optional[int] = None, max_length: Optional[int] = None
+    ) -> Tuple[str, str, str]:
         """
-        @example ('晃', 'アキラ', 'Akira')
+        :example: ('晃', 'アキラ', 'Akira')
         """
-        return self.random_element(self.first_name_male_pairs)
+        return self.random_element(self.first_name_male_pairs, min_length, max_length)
 
-    def first_name_female_pair(self) -> Tuple[str, str, str]:
+    def first_name_female_pair(
+        self, min_length: Optional[int] = None, max_length: Optional[int] = None
+    ) -> Tuple[str, str, str]:
         """
-        @example ('明美', 'アケミ', 'Akemi')
+        :example: ('明美', 'アケミ', 'Akemi')
         """
-        return self.random_element(self.first_name_female_pairs)
+        return self.random_element(self.first_name_female_pairs, min_length, max_length)
 
-    def last_name_pair(self) -> Tuple[str, str, str]:
+    def last_name_pair(
+        self, min_length: Optional[int] = None, max_length: Optional[int] = None
+    ) -> Tuple[str, str, str]:
         """
-        @example ('佐藤', 'サトウ', 'Sato')
+        :example: ('佐藤', 'サトウ', 'Sato')
         """
-        return self.random_element(self.last_name_pairs)
+        return self.random_element(self.last_name_pairs, min_length, max_length)
 
-    def first_name(self) -> str:
+    def first_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        @example '明美'
+        :example: '明美'
         """
-        return self.first_name_pair()[0]
+        return self.random_element(self.first_names, min_element_length=min_length, max_element_length=max_length)
 
-    def first_name_male(self) -> str:
+    def first_name_male(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        @example '晃'
+        :example: '晃'
         """
-        return self.first_name_male_pair()[0]
+        return self.random_element(self.first_names_male, min_element_length=min_length, max_element_length=max_length)
 
-    def first_name_female(self) -> str:
+    def first_name_female(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        @example '明美'
+        :example: '明美'
         """
-        return self.first_name_female_pair()[0]
+        return self.random_element(
+            self.first_names_female, min_element_length=min_length, max_element_length=max_length
+        )
 
-    def last_name(self) -> str:
+    def last_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        @example '佐藤'
+        :example: '佐藤'
         """
-        return self.last_name_pair()[0]
+        return self.random_element(self.last_names, min_element_length=min_length, max_element_length=max_length)
 
-    def first_kana_name(self) -> str:
+    def first_kana_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        @example 'アケミ'
+        :example: 'アケミ'
         """
-        return self.first_name_pair()[1]
+        return self.random_element(self.first_kana_names, min_element_length=min_length, max_element_length=max_length)
 
-    def first_kana_name_male(self) -> str:
+    def first_kana_name_male(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        @example 'アキラ'
+        :example: 'アキラ'
         """
-        return self.first_name_male_pair()[1]
+        return self.random_element(
+            self.first_kana_names_male, min_element_length=min_length, max_element_length=max_length
+        )
 
-    def first_kana_name_female(self) -> str:
+    def first_kana_name_female(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        @example 'アケミ'
+        :example: 'アケミ'
         """
-        return self.first_name_female_pair()[1]
+        return self.random_element(
+            self.first_kana_names_female, min_element_length=min_length, max_element_length=max_length
+        )
 
-    def last_kana_name(self) -> str:
+    def last_kana_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        @example 'サトウ'
+        :example: 'サトウ'
         """
-        return self.last_name_pair()[1]
+        return self.random_element(self.last_kana_names, min_element_length=min_length, max_element_length=max_length)
 
-    def first_romanized_name(self) -> str:
+    def first_romanized_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        @example 'Akemi'
+        :example: 'Akemi'
         """
-        return self.first_name_pair()[2]
+        return self.random_element(
+            self.first_romanized_names, min_element_length=min_length, max_element_length=max_length
+        )
 
-    def first_romanized_name_male(self) -> str:
+    def first_romanized_name_male(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        @example 'Akira'
+        :example: 'Akira'
         """
-        return self.first_name_male_pair()[2]
+        return self.random_element(
+            self.first_romanized_names_male, min_element_length=min_length, max_element_length=max_length
+        )
 
-    def first_romanized_name_female(self) -> str:
+    def first_romanized_name_female(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        @example 'Akemi'
+        :example: 'Akemi'
         """
-        return self.first_name_female_pair()[2]
+        return self.random_element(
+            self.first_romanized_names_female, min_element_length=min_length, max_element_length=max_length
+        )
 
-    def last_romanized_name(self) -> str:
+    def last_romanized_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
         """
-        @example 'Sato'
+        :example: 'Sato'
         """
-        return self.last_name_pair()[2]
+        return self.random_element(
+            self.last_romanized_names, min_element_length=min_length, max_element_length=max_length
+        )
 
     def kana_name(self) -> str:
         """
-        @example 'サトウ アケミ'
+        :example: 'サトウ アケミ'
         """
         pattern: str = self.random_element(self.kana_formats)
         return self.generator.parse(pattern)
 
     def kana_name_male(self) -> str:
         """
-        @example 'サトウ アキラ'
+        :example: 'サトウ アキラ'
         """
         pattern: str = self.random_element(self.kana_formats_male)
         return self.generator.parse(pattern)
 
     def kana_name_female(self) -> str:
         """
-        @example 'サトウ アケミ'
+        :example: 'サトウ アケミ'
         """
         pattern: str = self.random_element(self.kana_formats_female)
         return self.generator.parse(pattern)
 
     def romanized_name(self) -> str:
         """
-        @example 'Akemi Sato'
+        :example: 'Akemi Sato'
         """
         pattern: str = self.random_element(self.romanized_formats)
         return self.generator.parse(pattern)
 
     def romanized_name_male(self) -> str:
         """
-        @example 'Akira Sato'
+        :example: 'Akira Sato'
         """
         pattern: str = self.random_element(self.romanized_formats_male)
         return self.generator.parse(pattern)
 
     def romanized_name_female(self) -> str:
         """
-        @example 'Akemi Sato'
+        :example: 'Akemi Sato'
         """
         pattern: str = self.random_element(self.romanized_formats_female)
         return self.generator.parse(pattern)

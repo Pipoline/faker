@@ -1,12 +1,12 @@
+from typing import Dict
+
 from .. import Provider as LoremProvider
 
 
 class Provider(LoremProvider):
     """Implement lorem provider for ``pl_PL`` locale.
 
-    Sources:
-
-    - https://pl.wiktionary.org/wiki/Indeks:Polski_-_Najpopularniejsze_s%C5%82owa_1-2000
+    Source: https://pl.wiktionary.org/wiki/Indeks%3APolski_-_Najpopularniejsze_s%C5%82owa_1-2000
     """
 
     word_list = (
@@ -2011,3 +2011,5 @@ class Provider(LoremProvider):
         "ustawa",
         "rolnik",
     )
+
+    parts_of_speech: Dict[str, tuple] = {}

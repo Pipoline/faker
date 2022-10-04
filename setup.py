@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import os
-
 from pathlib import Path
 
 from setuptools import find_packages, setup
@@ -11,8 +9,6 @@ README = (here / "README.rst").read_text(encoding="utf-8")
 VERSION = (here / "VERSION").read_text(encoding="utf-8").strip()
 
 excluded_packages = ["docs", "tests", "tests.*"]
-if not os.environ.get("READTHEDOCS", False):
-    excluded_packages += ["faker.sphinx", "faker.sphinx.*"]
 
 
 # this module can be zip-safe if the zipimporter implements iter_modules or if
@@ -45,10 +41,10 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Software Development :: Libraries :: Python Modules",
@@ -60,6 +56,12 @@ setup(
     author="joke2k",
     author_email="joke2k@gmail.com",
     url="https://github.com/joke2k/faker",
+    project_urls={
+        "Bug Tracker": "https://github.com/joke2k/faker/issues",
+        "Changes": "https://github.com/joke2k/faker/blob/master/CHANGELOG.md",
+        "Documentation": "http://faker.rtfd.org/",
+        "Source Code": "https://github.com/joke2k/faker",
+    },
     license="MIT License",
     packages=find_packages(exclude=excluded_packages),
     package_data={
@@ -67,10 +69,9 @@ setup(
     },
     platforms=["any"],
     zip_safe=zip_safe,
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     install_requires=[
         "python-dateutil>=2.4",
-        "text-unidecode==1.3",
-        "typing-extensions>=3.10.0.2;python_version<'3.8'",
+        "typing-extensions>=3.7.4.3;python_version<'3.8'",
     ],
 )

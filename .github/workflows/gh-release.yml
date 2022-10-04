@@ -6,13 +6,18 @@ on:
 
 name: Create Release
 
+permissions:
+  contents: read
+
 jobs:
   build:
+    permissions:
+      contents: write  # for actions/create-release to create a release
     name: Create Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -22,6 +27,6 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           body: |
-            See CHANGELOG.md
+            See [CHANGELOG.md](https://github.com/joke2k/faker/blob/${{ github.ref }}/CHANGELOG.md).
           draft: false
           prerelease: false
