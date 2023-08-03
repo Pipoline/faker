@@ -14,6 +14,7 @@ from faker.providers.company.hu_HU import Provider as HuHuCompanyProvider
 from faker.providers.company.hy_AM import Provider as HyAmCompanyProvider
 from faker.providers.company.it_IT import Provider as ItItCompanyProvider
 from faker.providers.company.ja_JP import Provider as JaJpCompanyProvider
+from faker.providers.company.nl_BE import Provider as NlBeCompanyProvider
 from faker.providers.company.nl_NL import Provider as NlNlCompanyProvider
 from faker.providers.company.pl_PL import Provider as PlPlCompanyProvider
 from faker.providers.company.pl_PL import company_vat_checksum, local_regon_checksum, regon_checksum
@@ -23,6 +24,7 @@ from faker.providers.company.ru_RU import Provider as RuRuCompanyProvider
 from faker.providers.company.ru_RU import calculate_checksum
 from faker.providers.company.th_TH import Provider as ThThCompanyProvider
 from faker.providers.company.tr_TR import Provider as TrTrCompanyProvider
+from faker.utils.checksums import luhn_checksum
 
 
 class TestAzAz:
@@ -58,6 +60,22 @@ class TestFiFi:
             company_id = faker.company_business_id()
             assert len(company_id) == 9
             assert self._has_valid_checksum(company_id)
+
+
+class TestFrFr:
+    """Test fr_FR company provider methods"""
+
+    def test_siren(self, faker, num_samples):
+        for _ in range(num_samples):
+            siren = faker.siren()
+            assert len(siren) == 11
+            assert luhn_checksum(siren.replace(" ", "")) == 0
+
+    def test_siret(self, faker, num_samples):
+        for _ in range(num_samples):
+            siret = faker.siret()
+            assert len(siret) == 17
+            assert luhn_checksum(siret.replace(" ", "")) == 0
 
 
 class TestHyAm:
@@ -448,3 +466,13 @@ class TestElGr:
             suffix = faker.company_suffix()
             assert isinstance(suffix, str)
             assert suffix in ElGrCompanyProvider.company_suffixes
+
+
+class TestNlBe:
+    """Test nl_BE company provider methods"""
+
+    def test_company_suffix(self, faker, num_samples):
+        for _ in range(num_samples):
+            suffix = faker.company_suffix()
+            assert isinstance(suffix, str)
+            assert suffix in NlBeCompanyProvider.company_suffixes

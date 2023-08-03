@@ -1,10 +1,10 @@
 from string import ascii_uppercase
-from typing import List, Optional
+from typing import List
 
-from ... import BaseProvider
+from .. import Provider as AutomotiveProvider
 
 
-class Provider(BaseProvider):
+class Provider(AutomotiveProvider):
     """Implement automotive provider for ``en_PH`` locale.
 
     Vehicle registration in the Philippines has many controversies and is full
@@ -33,14 +33,14 @@ class Provider(BaseProvider):
     def _license_plate(self, license_format: List[str]) -> str:
         return self.bothify(self.random_element(license_format), ascii_uppercase)
 
-    def protocol_license_plate(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+    def protocol_license_plate(self) -> str:
         """Generate a protocol license plate.
 
         .. note::
            High ranking government officials are entitled to use low numbered
            protocol license plates.
         """
-        return self.random_element(self.protocol_licenses, min_length, max_length)
+        return self.random_element(self.protocol_licenses)
 
     def motorcycle_license_plate(self) -> str:
         """Generate a motorcycle license plate.

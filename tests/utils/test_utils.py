@@ -8,8 +8,9 @@ import faker
 
 from faker.config import META_PROVIDERS_MODULES, PROVIDERS
 from faker.generator import random
+from faker.typing import OrderedDictType
 from faker.utils.checksums import calculate_luhn, luhn_checksum
-from faker.utils.datasets import add_dicts
+from faker.utils.datasets import add_ordereddicts
 from faker.utils.distribution import choices_distribution, choices_distribution_unique
 from faker.utils.loading import find_available_locales, find_available_providers, get_path
 
@@ -53,14 +54,6 @@ class UtilsTestCase(unittest.TestCase):
         samples = choices_distribution_unique(a, p, length=4)
         assert len(set(samples)) == len(samples)
 
-    def test_add_dicts(self):
-        t1 = {"a": 1, "b": 2}
-        t2 = {"b": 1, "c": 3}
-        t3 = {"d": 4}
-
-        result = add_dicts(t1, t2, t3)
-        assert result == {"a": 1, "c": 3, "b": 3, "d": 4}
-
     def test_get_path(self):
         result = get_path(faker)
         assert isinstance(result, str)
@@ -86,6 +79,7 @@ class UtilsTestCase(unittest.TestCase):
                     "faker.providers.credit_card",
                     "faker.providers.currency",
                     "faker.providers.date_time",
+                    "faker.providers.emoji",
                     "faker.providers.file",
                     "faker.providers.geo",
                     "faker.providers.internet",
@@ -93,10 +87,12 @@ class UtilsTestCase(unittest.TestCase):
                     "faker.providers.job",
                     "faker.providers.lorem",
                     "faker.providers.misc",
+                    "faker.providers.passport",
                     "faker.providers.person",
                     "faker.providers.phone_number",
                     "faker.providers.profile",
                     "faker.providers.python",
+                    "faker.providers.sbn",
                     "faker.providers.ssn",
                     "faker.providers.user_agent",
                 ],
@@ -125,3 +121,9 @@ class UtilsTestCase(unittest.TestCase):
         Example from wiki https://en.wikipedia.org/wiki/Luhn_algorithm
         """
         assert luhn_checksum("79927398714") != 0
+
+    def test_add_ordereddicts(self):
+        d1 = OrderedDictType([("a", 1), ("b", 2)])
+        d2 = OrderedDictType([("c", 3), ("d", 4)])
+        result = add_ordereddicts(d1, d2)
+        assert result == OrderedDictType([("a", 1), ("b", 2), ("c", 3), ("d", 4)])

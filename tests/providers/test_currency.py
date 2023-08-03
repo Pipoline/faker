@@ -34,6 +34,12 @@ class TestCurrencyProvider:
             name = faker.currency_name()
             assert isinstance(name, str) and name in self.currency_names
 
+    def test_currency_code_has_symbol(self, faker, num_samples):
+        for _ in range(num_samples):
+            code = faker.currency_code()
+            symbol = faker.currency_symbol(code=code)
+            assert isinstance(symbol, str)
+
     def test_currency_symbol_no_code_supplied(self, faker, num_samples):
         for _ in range(num_samples):
             symbol = faker.currency_symbol()
@@ -435,6 +441,23 @@ class TestElGr:
         from faker.providers.currency.el_GR import Provider as ElGrCurrencyProvider
 
         cls.provider = ElGrCurrencyProvider
+
+    def test_pricetag(self, faker, num_samples):
+        for _ in range(num_samples):
+            pricetag = faker.pricetag()
+            assert isinstance(pricetag, str)
+
+
+class TestTrTr:
+    """Test tr_TR currency provider"""
+
+    num_samples = 100
+
+    @classmethod
+    def setup_class(cls):
+        from faker.providers.currency.tr_TR import Provider as TrTrCurrencyProvider
+
+        cls.provider = TrTrCurrencyProvider
 
     def test_pricetag(self, faker, num_samples):
         for _ in range(num_samples):

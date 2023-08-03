@@ -1,5 +1,3 @@
-from typing import Optional
-
 from .. import Provider as AddressProvider
 
 
@@ -435,7 +433,6 @@ class Provider(AddressProvider):
         "Liettua",
         "Luxemburg",
         "Madagaskar",
-        "Makedonia",
         "Malawi",
         "Malediivit",
         "Malesia",
@@ -468,6 +465,7 @@ class Provider(AddressProvider):
         "Papua-Uusi-Guinea",
         "Paraguay",
         "Peru",
+        "Pohjois-Makedonia",
         "Korean demokraattinen kansantasavalta",
         "Portugali",
         "Puola",
@@ -790,13 +788,13 @@ class Provider(AddressProvider):
         "Zaidan",
     )
 
-    def street_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
-        return self.random_element(self.street_prefixes, min_length, max_length)
+    def street_prefix(self) -> str:
+        return self.random_element(self.street_prefixes)
 
-    def city_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
-        return self.random_element(self.cities, min_length, max_length)
+    def city_name(self) -> str:
+        return self.random_element(self.cities)
 
-    def administrative_unit(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
-        return self.random_element(self.states, min_length, max_length)
+    def administrative_unit(self) -> str:
+        return self.random_element(self.states)
 
     state = administrative_unit

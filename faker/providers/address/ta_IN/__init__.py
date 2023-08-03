@@ -1,10 +1,7 @@
-from typing import Optional
-
 from .. import Provider as AddressProvider
 
 
 class Provider(AddressProvider):
-
     city_formats = ("{{city_name}}",)
 
     street_name_formats = (
@@ -423,10 +420,10 @@ class Provider(AddressProvider):
         "மொன்செராட்",
     )
 
-    def city_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
-        return self.random_element(self.cities, min_length, max_length)
+    def city_name(self) -> str:
+        return self.random_element(self.cities)
 
-    def administrative_unit(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
-        return self.random_element(self.states, min_length, max_length)
+    def administrative_unit(self) -> str:
+        return self.random_element(self.states)
 
     state = administrative_unit

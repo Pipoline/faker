@@ -1,10 +1,7 @@
-from typing import Optional
-
 from .. import Provider as AddressProvider
 
 
 class Provider(AddressProvider):
-
     # Building numbers don't go higher than a 1000
     building_number_formats = ("%##", "%#", "%")
 
@@ -2395,7 +2392,6 @@ class Provider(AddressProvider):
         "Litauen",
         "Luxembourg",
         "Madagaskar",
-        "Makedonien",
         "Malawi",
         "Malaysia",
         "Maldiverne",
@@ -2423,6 +2419,7 @@ class Provider(AddressProvider):
         "Nigeria",
         "Niue",
         "Nordkorea",
+        "Nordmakedonien",
         "Norge",
         "Oman",
         "Pakistan",
@@ -2510,16 +2507,16 @@ class Provider(AddressProvider):
         "Syddanmark",
     )
 
-    def dk_street_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+    def dk_street_name(self) -> str:
         """
         This returns the name of a street, without any suffix.
         """
-        return self.random_element(self.street_names, min_length, max_length)
+        return self.random_element(self.street_names)
 
-    def city_name(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
-        return self.random_element(self.cities, min_length, max_length)
+    def city_name(self) -> str:
+        return self.random_element(self.cities)
 
-    def administrative_unit(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
-        return self.random_element(self.states, min_length, max_length)
+    def administrative_unit(self) -> str:
+        return self.random_element(self.states)
 
     state = administrative_unit

@@ -1,4 +1,6 @@
-from typing import Optional, Tuple
+from typing import Tuple
+
+from faker.utils.checksums import calculate_luhn
 
 from .. import Provider as CompanyProvider
 
@@ -66,23 +68,23 @@ class Provider(CompanyProvider):
 
     siren_format = "### ### ###"
 
-    def catch_phrase_noun(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+    def catch_phrase_noun(self) -> str:
         """
         Returns a random catch phrase noun.
         """
-        return self.random_element(self.nouns, min_length, max_length)
+        return self.random_element(self.nouns)
 
-    def catch_phrase_attribute(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+    def catch_phrase_attribute(self) -> str:
         """
         Returns a random catch phrase attribute.
         """
-        return self.random_element(self.attributes, min_length, max_length)
+        return self.random_element(self.attributes)
 
-    def catch_phrase_verb(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+    def catch_phrase_verb(self) -> str:
         """
         Returns a random catch phrase verb.
         """
-        return self.random_element(self.verbs, min_length, max_length)
+        return self.random_element(self.verbs)
 
     def catch_phrase(self) -> str:
         """
@@ -90,7 +92,6 @@ class Provider(CompanyProvider):
         """
         catch_phrase = ""
         while True:
-
             pattern: str = self.random_element(self.catch_phrase_formats)
             catch_phrase = self.generator.parse(pattern)
             catch_phrase = catch_phrase[0].upper() + catch_phrase[1:]
@@ -121,9 +122,11 @@ class Provider(CompanyProvider):
 
     def siren(self) -> str:
         """
-        Generates a siren number (9 digits).
+        Generates a siren number (9 digits). Formatted as '### ### ###'.
         """
-        return self.numerify(self.siren_format)
+        code = self.numerify("########")
+        luhn_checksum = str(calculate_luhn(float(code)))
+        return f"{code[:3]} {code[3:6]} {code[6:]}{luhn_checksum}"
 
     def siret(self, max_sequential_digits: int = 2) -> str:
         """
@@ -131,10 +134,15 @@ class Provider(CompanyProvider):
         It is in fact the result of the concatenation of a siren number (9 digits),
         a sequential number (4 digits) and a control number (1 digit) concatenation.
         If $max_sequential_digits is invalid, it is set to 2.
-        :param max_sequential_digits: The maximum number of digits for the sequential number (> 0 && <= 4).
+
+        The siret number is formatted as '### ### ### #####'.
+        :param max_sequential_digits The maximum number of digits for the sequential number (> 0 && <= 4).
         """
         if max_sequential_digits > 4 or max_sequential_digits <= 0:
             max_sequential_digits = 2
 
         sequential_number = str(self.random_number(max_sequential_digits)).zfill(4)
-        return self.numerify(self.siren() + " " + sequential_number + "#")
+
+        code = self.siren().replace(" ", "") + sequential_number
+        luhn_checksum = str(calculate_luhn(float(code)))
+        return f"{code[:3]} {code[3:6]} {code[6:9]} {code[9:]}{luhn_checksum}"

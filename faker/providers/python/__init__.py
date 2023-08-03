@@ -4,16 +4,23 @@ import sys
 import warnings
 
 from decimal import Decimal
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type, Union, no_type_check
+from enum import Enum
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type, TypeVar, Union, cast, no_type_check
 
+from ...exceptions import BaseFakerException
 from .. import BaseProvider, ElementsType
 
 TypesNames = List[str]
 TypesSpec = Union[List[Type], Tuple[Type, ...]]
+TEnum = TypeVar("TEnum", bound=Enum)
+
+
+class EmptyEnumException(BaseFakerException):
+    pass
 
 
 class Provider(BaseProvider):
-    default_value_types: ElementsType = (
+    default_value_types: ElementsType[str] = (
         "str",
         "str",
         "str",
@@ -48,12 +55,67 @@ class Provider(BaseProvider):
             allowed_types = ()
         return tuple(value_types) + tuple(allowed_types)
 
-    def pybool(self) -> bool:
-        return self.random_int(0, 1) == 1
+    def pyobject(
+        self,
+        object_type: Optional[Type[Union[bool, str, float, int, tuple, set, list, Iterable, dict]]] = None,
+    ) -> Optional[Union[bool, str, float, int, tuple, set, list, Iterable, dict]]:
+        """
+        Generates a random object passing the type desired.
 
-    def pystr(self, min_chars: Optional[int] = None, max_chars: int = 20, prefix: str = "", suffix: str = "") -> str:
+        :object_type: the type of the object to generate.
+        :return: the random object generated.
+        :raises ValueError: if the object type passed is not supported
+        """
+        if object_type is None:
+            return None
+        elif object_type == bool:
+            return self.pybool()
+        elif object_type == str:
+            return self.pystr()
+        elif object_type == float:
+            return self.pyfloat()
+        elif object_type == int:
+            return self.pyint()
+        elif object_type == tuple:
+            return self.pytuple()
+        elif object_type == set:
+            return self.pyset()
+        elif object_type == list:
+            return self.pylist()
+        elif object_type == Iterable:
+            return self.pyiterable()
+        elif object_type == dict:
+            return self.pydict()
+        else:
+            raise ValueError(f"Object type `{object_type}` is not supported by `pyobject` function")
+
+    def pybool(self, truth_probability: int = 50) -> bool:
+        """
+        Generates a random boolean, optionally biased towards `True` or `False`.
+
+        :truth_probability: Probability of generating a `True` value. Must be between `0` and `100` inclusive'.
+        :return: Random boolean.
+        :raises ValueError: If invalid `truth_probability` is provided.
+        """
+        if truth_probability < 0 or truth_probability > 100:
+            raise ValueError("Invalid `truth_probability` value: must be between `0` and `100` inclusive")
+
+        return self.random_int(1, 100) <= truth_probability
+
+    def pystr(
+        self,
+        min_chars: Optional[int] = None,
+        max_chars: int = 20,
+        prefix: str = "",
+        suffix: str = "",
+    ) -> str:
         """
         Generates a random string of upper and lowercase letters.
+
+        :param min_chars: minimum length of the random part.
+        :param max_chars: maximum length of the random part.
+        :param prefix: an optional prefix to prepend to the random string.
+        :param suffix: an optional suffix to append to the random string.
         :return: Random of random length between min and max characters.
         """
         if min_chars is None:
@@ -121,20 +183,23 @@ class Provider(BaseProvider):
 
         sign = ""
         if (min_value is not None) or (max_value is not None):
+            # Copy values to ensure we're not modifying the original values and thus going out of bounds
+            left_min_value = min_value
+            left_max_value = max_value
             # Make sure left_digits still respected
             if left_digits is not None:
                 if max_value is None:
-                    max_value = 10**left_digits  # minus smallest representable, adjusted later
+                    left_max_value = 10**left_digits  # minus smallest representable, adjusted later
                 if min_value is None:
-                    min_value = -(10**left_digits)  # plus smallest representable, adjusted later
+                    left_min_value = -(10**left_digits)  # plus smallest representable, adjusted later
 
             if max_value is not None and max_value < 0:
-                max_value += 1  # as the random_int will be generated up to max_value - 1
+                left_max_value += 1  # as the random_int will be generated up to max_value - 1
             if min_value is not None and min_value < 0:
-                min_value += 1  # as we then append digits after the left_number
+                left_min_value += 1  # as we then append digits after the left_number
             left_number = self._safe_random_int(
-                min_value,
-                max_value,
+                left_min_value,
+                left_max_value,
                 positive,
             )
         else:
@@ -155,6 +220,17 @@ class Provider(BaseProvider):
             result = min(result, 10**left_digits - 1)
             result = max(result, -(10**left_digits + 1))
 
+        # It's possible for the result to end up > than max_value or < than min_value
+        # When this happens we introduce some variance so we're not always the exactly the min_value or max_value.
+        # Which can happen a lot depending on the difference of the values.
+        # Ensure the variance is bound by the difference between the max and min
+        if max_value is not None:
+            if result > max_value:
+                result = result - (result - max_value + self.generator.random.uniform(0, max_value - min_value))
+        if min_value is not None:
+            if result < min_value:
+                result = result + (min_value - result + self.generator.random.uniform(0, max_value - min_value))
+
         return result
 
     def _safe_random_int(self, min_value: float, max_value: float, positive: bool) -> int:
@@ -171,7 +247,11 @@ class Provider(BaseProvider):
         if min_value == max_value:
             return self._safe_random_int(orig_min_value, orig_max_value, positive)
         else:
-            return self.random_int(int(min_value), int(max_value - 1))
+            min_value = int(min_value)
+            max_value = int(max_value - 1)
+            if max_value < min_value:
+                max_value += 1
+            return self.random_int(min_value, max_value)
 
     def pyint(self, min_value: int = 0, max_value: int = 9999, step: int = 1) -> int:
         return self.generator.random_int(min_value, max_value, step=step)
@@ -330,7 +410,6 @@ class Provider(BaseProvider):
         value_types: Optional[TypesSpec] = None,
         allowed_types: Optional[TypesSpec] = None,
     ) -> Iterator:
-
         value_types: TypesSpec = self._check_signature(value_types, allowed_types)
 
         value_types: TypesNames = [
@@ -378,7 +457,10 @@ class Provider(BaseProvider):
         )
 
     def pystruct(
-        self, count: int = 10, value_types: Optional[TypesSpec] = None, allowed_types: Optional[TypesSpec] = None
+        self,
+        count: int = 10,
+        value_types: Optional[TypesSpec] = None,
+        allowed_types: Optional[TypesSpec] = None,
     ) -> Tuple[List, Dict, Dict]:
         value_types: TypesSpec = self._check_signature(value_types, allowed_types)
 
@@ -417,3 +499,24 @@ class Provider(BaseProvider):
                 },
             }
         return types, d, nd
+
+    def enum(self, enum_cls: Type[TEnum]) -> TEnum:
+        """
+        Returns a random enum of the provided input `Enum` type.
+
+        :param enum_cls: The `Enum` type to produce the value for.
+        :returns: A randomly selected enum value.
+        """
+
+        if enum_cls is None:
+            raise ValueError("'enum_cls' cannot be None")
+
+        if not issubclass(enum_cls, Enum):
+            raise TypeError("'enum_cls' must be an Enum type")
+
+        members: List[TEnum] = list(cast(Iterable[TEnum], enum_cls))
+
+        if len(members) < 1:
+            raise EmptyEnumException(f"The provided Enum: '{enum_cls.__name__}' has no members.")
+
+        return self.random_element(members)

@@ -9,11 +9,12 @@ import tarfile
 import uuid
 import zipfile
 
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Type, Union
 
 from faker.exceptions import UnsupportedFeature
 
 from .. import BaseProvider
+from ..python import TypesSpec
 
 localized = True
 
@@ -70,9 +71,9 @@ class Provider(BaseProvider):
         return res.hexdigest()
 
     def sha1(self, raw_output: bool = False) -> Union[bytes, str]:
-        """Generate a random SHA1 hash.
+        """Generate a random SHA-1 hash.
 
-        If ``raw_output`` is ``False`` (default), a hexadecimal string representation of the SHA1 hash
+        If ``raw_output`` is ``False`` (default), a hexadecimal string representation of the SHA-1 hash
         will be returned. If ``True``, a ``bytes`` object representation will be returned instead.
 
         :sample: raw_output=False
@@ -84,9 +85,9 @@ class Provider(BaseProvider):
         return res.hexdigest()
 
     def sha256(self, raw_output: bool = False) -> Union[bytes, str]:
-        """Generate a random SHA256 hash.
+        """Generate a random SHA-256 hash.
 
-        If ``raw_output`` is ``False`` (default), a hexadecimal string representation of the SHA56 hash
+        If ``raw_output`` is ``False`` (default), a hexadecimal string representation of the SHA-256 hash
         will be returned. If ``True``, a ``bytes`` object representation will be returned instead.
 
         :sample: raw_output=False
@@ -488,7 +489,28 @@ class Provider(BaseProvider):
             delimiter="|",
         )
 
-    def json(self, data_columns: List = None, num_rows: int = 10, indent: int = None) -> str:
+    def json_bytes(
+        self,
+        data_columns: Optional[List] = None,
+        num_rows: int = 10,
+        indent: Optional[int] = None,
+        cls: Optional[Type[json.JSONEncoder]] = None,
+    ) -> bytes:
+        """
+        Generate random JSON structure and return as bytes.
+
+        For more information on the different arguments of this method, refer to
+        :meth:`json() <faker.providers.misc.Provider.json>` which is used under the hood.
+        """
+        return self.json(data_columns=data_columns, num_rows=num_rows, indent=indent, cls=cls).encode()
+
+    def json(
+        self,
+        data_columns: Optional[List] = None,
+        num_rows: int = 10,
+        indent: Optional[int] = None,
+        cls: Optional[Type[json.JSONEncoder]] = None,
+    ) -> str:
         """
         Generate random JSON structure values.
 
@@ -521,6 +543,8 @@ class Provider(BaseProvider):
         :type num_rows: int
         :param indent: number of spaces to indent the fields
         :type indent: int
+        :param cls: optional json encoder to use for non-standard objects such as datetimes
+        :type cls: json.JSONEncoder
         :return: Serialized JSON data
         :rtype: str
 
@@ -585,12 +609,41 @@ class Provider(BaseProvider):
             raise TypeError("Invalid data_columns type. Must be a dictionary or list")
 
         if num_rows == 1:
-            return json.dumps(create_json_structure(data_columns), indent=indent)
+            return json.dumps(create_json_structure(data_columns), indent=indent, cls=cls)
 
         data = [create_json_structure(data_columns) for _ in range(num_rows)]
-        return json.dumps(data, indent=indent)
+        return json.dumps(data, indent=indent, cls=cls)
 
-    def fixed_width(self, data_columns: list = None, num_rows: int = 10, align: str = "left") -> str:
+    def xml(
+        self,
+        nb_elements: int = 10,
+        variable_nb_elements: bool = True,
+        value_types: Optional[TypesSpec] = None,
+        allowed_types: Optional[TypesSpec] = None,
+    ) -> str:
+        """
+        Returns some XML.
+
+        :nb_elements: number of elements for dictionary
+        :variable_nb_elements: is use variable number of elements for dictionary
+        :value_types: type of dictionary values
+
+        Note: this provider required xmltodict library installed
+        """
+        try:
+            import xmltodict
+        except ImportError:
+            raise UnsupportedFeature("`xml` requires the `xmltodict` Python library.", "xml")
+        _dict = self.generator.pydict(
+            nb_elements=nb_elements,
+            variable_nb_elements=variable_nb_elements,
+            value_types=value_types,
+            allowed_types=allowed_types,
+        )
+        _dict = {self.generator.word(): _dict}
+        return xmltodict.unparse(_dict)
+
+    def fixed_width(self, data_columns: Optional[list] = None, num_rows: int = 10, align: str = "left") -> str:
         """
         Generate random fixed width values.
 
@@ -655,7 +708,7 @@ class Provider(BaseProvider):
 
     def _value_format_selection(self, definition: str, **kwargs: Any) -> Union[int, str]:
         """
-        Formats the string in different ways depending on it's contents.
+        Formats the string in different ways depending on its contents.
 
         The return can be the '@word' itself, a '{{ token }}' passed to PyStr,
         or a 'provider:argument_group' format field that returns potentially
@@ -673,12 +726,12 @@ class Provider(BaseProvider):
         if re.match(r"^@.*", definition):
             return definition.lstrip("@")
 
-        # Check if a argument group has been supplied
+        # Check if an argument group has been supplied
         if re.match(r"^[a-zA-Z0-9_-]*:\w", definition):
             definition, argument_group = definition.split(":")
             arguments = self.generator.get_arguments(argument_group.strip())
 
             return self.generator.format(definition.strip(), **arguments)
 
-        # Assume the string is refering to a provider
+        # Assume the string is referring to a provider
         return self.generator.format(definition, **kwargs)

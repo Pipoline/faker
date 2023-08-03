@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Tuple
 
 from .. import Provider as AddressProvider
 
@@ -46,7 +46,6 @@ class Provider(AddressProvider):
     address_formats = ("{{street_address}}\n{{postcode}} {{city}}",)
 
     building_number_formats = ("%", "%#", "%#", "%#", "%##")
-    postcode_formats = ("#####",)
     countries = (
         "Afghanistan",
         "Afrique du sud",
@@ -170,7 +169,7 @@ class Provider(AddressProvider):
         "Lithuanie",
         "Luxembourg",
         "Macau",
-        "Macédoine",
+        "Macédoine du Nord",
         "Madagascar",
         "Malaisie",
         "Malawi",
@@ -426,32 +425,32 @@ class Provider(AddressProvider):
         ("976", "Mayotte"),
     )
 
-    def street_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+    def street_prefix(self) -> str:
         """
         :example: 'rue'
         """
-        return self.random_element(self.street_prefixes, min_length, max_length)
+        return self.random_element(self.street_prefixes)
 
-    def city_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+    def city_prefix(self) -> str:
         """
         :example: 'rue'
         """
-        return self.random_element(self.city_prefixes, min_length, max_length)
+        return self.random_element(self.city_prefixes)
 
-    def administrative_unit(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+    def administrative_unit(self) -> str:
         """
         :example: 'Guadeloupe'
         """
-        return self.random_element(self.regions, min_length, max_length)
+        return self.random_element(self.regions)
 
     region = administrative_unit
 
-    def department(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> Tuple[str, str]:
+    def department(self) -> Tuple[str, str]:
         """
         Randomly returns a french department ('departmentNumber' , 'departmentName').
         :example: ('2B' . 'Haute-Corse')
         """
-        return self.random_element(self.departments, min_length, max_length)
+        return self.random_element(self.departments)
 
     def department_name(self) -> str:
         """
@@ -467,3 +466,13 @@ class Provider(AddressProvider):
         :example: '59'
         """
         return self.department()[0]
+
+    def postcode(self) -> str:
+        """
+        Randomly returns a postcode generated from existing french department number.
+        exemple: '33260'
+        """
+        department = self.department_number()
+        if department in ["2A", "2B"]:
+            department = "20"
+        return f"{department}{self.random_number(digits=5 - len(department), fix_len=True)}"

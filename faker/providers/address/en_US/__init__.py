@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Optional
+from typing import Optional, Tuple
 
 from ..en import Provider as AddressProvider
 
@@ -419,20 +419,35 @@ class Provider(AddressProvider):
         "WV": (24701, 26886),
         "WI": (53001, 54990),
         "WY": (82001, 83128),
+        # Territories & freely-associated states
+        # incomplete ranges with accurate subsets - https://www.geonames.org/postalcode-search.html
+        "AS": (96799, 96799),
+        "FM": (96941, 96944),
+        "GU": (96910, 96932),
+        "MH": (96960, 96970),
+        "MP": (96950, 96952),
+        "PW": (96940, 96940),
+        "PR": (600, 799),
+        "VI": (801, 805),
     }
 
     territories_abbr = (
         "AS",
-        "FM",
         "GU",
-        "MH",
         "MP",
-        "PW",
         "PR",
         "VI",
     )
 
-    states_and_territories_abbr = states_abbr + territories_abbr
+    # Freely-associated states (sovereign states; members of COFA)
+    # https://en.wikipedia.org/wiki/Compact_of_Free_Association
+    freely_associated_states_abbr = (
+        "FM",
+        "MH",
+        "PW",
+    )
+
+    known_usps_abbr = states_abbr + territories_abbr + freely_associated_states_abbr
 
     military_state_abbr = ("AE", "AA", "AP")
 
@@ -474,27 +489,39 @@ class Provider(AddressProvider):
 
     secondary_address_formats = ("Apt. ###", "Suite ###")
 
-    def city_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
-        return self.random_element(self.city_prefixes, min_length, max_length)
+    def city_prefix(self) -> str:
+        return self.random_element(self.city_prefixes)
 
     def secondary_address(self) -> str:
         return self.numerify(self.random_element(self.secondary_address_formats))
 
-    def administrative_unit(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
-        return self.random_element(self.states, min_length, max_length)
+    def administrative_unit(self) -> str:
+        return self.random_element(self.states)
 
     state = administrative_unit
 
-    def state_abbr(self, include_territories: bool = True) -> str:
+    def state_abbr(
+        self,
+        include_territories: bool = True,
+        include_freely_associated_states: bool = True,
+    ) -> str:
         """
-        :returns: A random state or territory abbreviation.
+        :returns: A random two-letter USPS postal code
+
+        By default, the resulting code may abbreviate any of the fity states,
+        five US territories, or three freely-associating sovereign states.
 
         :param include_territories: If True, territories will be included.
-            If False, only states will be returned.
+            If False, US territories will be excluded.
+        :param include_freely_associated_states: If True, freely-associated states will be included.
+            If False, sovereign states in free association with the US will be excluded.
         """
+        abbreviations: Tuple[str, ...] = self.states_abbr
         if include_territories:
-            self.random_element(self.states_and_territories_abbr)
-        return self.random_element(self.states_abbr)
+            abbreviations += self.territories_abbr
+        if include_freely_associated_states:
+            abbreviations += self.freely_associated_states_abbr
+        return self.random_element(abbreviations)
 
     def postcode(self) -> str:
         return "%05d" % self.generator.random.randint(501, 99950)
@@ -511,7 +538,7 @@ class Provider(AddressProvider):
         if state_abbr is None:
             state_abbr = self.random_element(self.states_abbr)
 
-        if state_abbr in self.states_abbr:
+        if state_abbr in self.known_usps_abbr:
             postcode = "%d" % (
                 self.generator.random.randint(
                     self.states_postcode[state_abbr][0],
@@ -519,25 +546,29 @@ class Provider(AddressProvider):
                 )
             )
 
-            if len(postcode) == 4:
-                postcode = "0%s" % postcode
+            # zero left pad up until desired length (some have length 3 or 4)
+            target_postcode_len = 5
+            current_postcode_len = len(postcode)
+            if current_postcode_len < target_postcode_len:
+                pad = target_postcode_len - current_postcode_len
+                postcode = f"{'0'*pad}{postcode}"
 
             return postcode
 
         else:
             raise Exception("State Abbreviation not found in list")
 
-    def military_ship(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+    def military_ship(self) -> str:
         """
         :example: 'USS'
         """
-        return self.random_element(self.military_ship_prefix, min_length, max_length)
+        return self.random_element(self.military_ship_prefix)
 
-    def military_state(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+    def military_state(self) -> str:
         """
         :example: 'APO'
         """
-        return self.random_element(self.military_state_abbr, min_length, max_length)
+        return self.random_element(self.military_state_abbr)
 
     def military_apo(self) -> str:
         """

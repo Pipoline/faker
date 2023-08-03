@@ -1,7 +1,7 @@
 import random as random_module
 import re
 
-from typing import TYPE_CHECKING, Any, Callable, Dict, Hashable, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, Hashable, List, Optional, Type, Union
 
 from .typing import SeedType
 
@@ -17,7 +17,6 @@ Sentinel = object()
 
 
 class Generator:
-
     __config: Dict[str, Dict[Hashable, Any]] = {
         "arguments": {},
     }
@@ -30,8 +29,7 @@ class Generator:
         self.__config = dict(list(self.__config.items()) + list(config.items()))
         self.__random = random
 
-    def add_provider(self, provider: "BaseProvider") -> None:
-
+    def add_provider(self, provider: Union["BaseProvider", Type["BaseProvider"]]) -> None:
         if isinstance(provider, type):
             provider = provider(self)
 
@@ -99,12 +97,12 @@ class Generator:
                 raise AttributeError(f"Unknown formatter {formatter!r}")
             raise AttributeError(msg)
 
-    def set_formatter(self, name: str, method: Callable) -> None:
+    def set_formatter(self, name: str, formatter: Callable) -> None:
         """
         This method adds a provider method to generator.
         Override this method to add some decoration or logging stuff.
         """
-        setattr(self, name, method)
+        setattr(self, name, formatter)
 
     def set_arguments(self, group: str, argument: str, value: Optional[Any] = None) -> None:
         """

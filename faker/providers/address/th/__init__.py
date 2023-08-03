@@ -2,7 +2,6 @@ from .. import Provider as AddressProvider
 
 
 class Provider(AddressProvider):
-
     # country names adapted from
     # https://github.com/PyThaiNLP/pythainlp/blob/dev/pythainlp/corpus/countries_th.txt
     countries = (
@@ -149,7 +148,7 @@ class Provider(AddressProvider):
         "มอลตา",
         "มัลดีฟส์",
         "มาเก๊า",
-        "มาซิโดเนีย",
+        "ประเทศมาซิโดเนียเหนือ",
         "มาดากัสการ์",
         "มายอต",
         "มาร์ตีนิก",

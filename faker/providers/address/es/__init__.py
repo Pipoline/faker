@@ -2,7 +2,6 @@ from .. import Provider as AddressProvider
 
 
 class Provider(AddressProvider):
-
     # List of Countries https://www.un.org/es/members/
     countries = (
         "Afganistán",
@@ -64,7 +63,6 @@ class Provider(AddressProvider):
         "Estados Unidos de América",
         "Estonia",
         "Etiopía",
-        "ex República Yugoslava de Macedonia",
         "Federación de Rusia",
         "Fiji",
         "Filipinas",
@@ -149,6 +147,7 @@ class Provider(AddressProvider):
         "República Centroafricana",
         "República Checa",
         "República de Corea",
+        "República de Macedonia del Norte",
         "República de Moldova",
         "República Democrática del Congo",
         "República Democrática Popular Lao",

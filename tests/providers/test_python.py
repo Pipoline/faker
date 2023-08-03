@@ -3,11 +3,29 @@ import sys
 import unittest
 import warnings
 
+from typing import Iterable, Optional, Union
 from unittest.mock import patch
 
 import pytest
 
 from faker import Faker
+
+
+@pytest.mark.parametrize("object_type", (None, bool, str, float, int, tuple, set, list, Iterable, dict))
+def test_pyobject(
+    object_type: Optional[Union[bool, str, float, int, tuple, set, list, Iterable, dict]],
+):
+    random_object = Faker().pyobject(object_type=object_type)
+    if object_type is None:
+        assert random_object is None
+    else:
+        assert isinstance(random_object, object_type)
+
+
+@pytest.mark.parametrize("object_type", (object, type, callable))
+def test_pyobject_with_unknown_object_type(object_type):
+    with pytest.raises(ValueError, match=f"Object type `{object_type}` is not supported by `pyobject` function"):
+        assert Faker().pyobject(object_type=object_type)
 
 
 @pytest.mark.parametrize(
@@ -21,7 +39,6 @@ from faker import Faker
     ),
 )
 def test_pyfloat_right_and_left_digits_positive(mock_random_number_source, right_digits, expected_decimal_part):
-
     # Remove the randomness from the test by mocking the `BaseProvider.random_number` value
     def mock_random_number(self, digits=None, fix_len=False):
         return int(mock_random_number_source[: digits or 1])
@@ -33,7 +50,6 @@ def test_pyfloat_right_and_left_digits_positive(mock_random_number_source, right
 
 
 def test_pyfloat_right_or_left_digit_overflow():
-
     max_float_digits = sys.float_info.dig
     faker = Faker()
 
@@ -47,7 +63,6 @@ def test_pyfloat_right_or_left_digit_overflow():
 
     with patch("faker.providers.BaseProvider.random_int", mock_random_int):
         with patch("faker.providers.BaseProvider.random_number", mock_random_number):
-
             # A bit too much, but ~half on either side
             with pytest.raises(ValueError, match="Asking for too many digits"):
                 faker.pyfloat(
@@ -184,6 +199,17 @@ class TestPyfloat(unittest.TestCase):
         self.assertLessEqual(result, 100)
         self.assertGreater(result, 0)
 
+    def test_max_and_min_value_positive_with_decimals(self):
+        """
+        Combining the max_value and min_value keyword arguments with
+        positive values for each produces numbers that obey both of
+        those constraints.
+        """
+        for _ in range(1000):
+            result = self.fake.pyfloat(min_value=100.123, max_value=200.321)
+            self.assertLessEqual(result, 200.321)
+            self.assertGreaterEqual(result, 100.123)
+
     def test_max_and_min_value_negative(self):
         """
         Combining the max_value and min_value keyword arguments with
@@ -194,6 +220,17 @@ class TestPyfloat(unittest.TestCase):
         result = self.fake.pyfloat(max_value=-100, min_value=-200)
         self.assertLessEqual(result, -100)
         self.assertGreaterEqual(result, -200)
+
+    def test_max_and_min_value_negative_with_decimals(self):
+        """
+        Combining the max_value and min_value keyword arguments with
+        negative values for each produces numbers that obey both of
+        those constraints.
+        """
+        for _ in range(1000):
+            result = self.fake.pyfloat(max_value=-100.123, min_value=-200.321)
+            self.assertLessEqual(result, -100.123)
+            self.assertGreaterEqual(result, -200.321)
 
     def test_positive_and_min_value_incompatible(self):
         """
@@ -227,6 +264,9 @@ class TestPyfloat(unittest.TestCase):
         test to check that `pyfloat` does not cause a deprecation warning.
         """
         self.fake.pyfloat(min_value=-1.0, max_value=1.0)
+
+    def test_float_min_and_max_value_with_same_whole(self):
+        self.fake.pyfloat(min_value=2.3, max_value=2.5)
 
 
 class TestPydecimal(unittest.TestCase):
@@ -468,9 +508,59 @@ class TestPython(unittest.TestCase):
     def setUp(self):
         self.factory = Faker()
 
-    def test_pybool(self):
+    def test_pybool_return_type(self):
         some_bool = self.factory.pybool()
         assert isinstance(some_bool, bool)
+
+    def __test_pybool_truth_probability(
+        self,
+        truth_probability: int,
+        deviation_threshold: int = 5,
+        iterations: int = 999,
+    ):
+        truth_count_expected = iterations * truth_probability / 100
+        truth_count_actual = 0
+
+        for iteration in range(iterations):
+            boolean = self.factory.pybool(truth_probability=truth_probability)
+            assert isinstance(boolean, bool)
+            if boolean is True:
+                truth_count_actual += 1
+
+        deviation_absolute = abs(truth_count_expected - truth_count_actual)
+        deviation_percentage = deviation_absolute / iterations * 100
+
+        # Increase `deviation_threshold` value in case this assertion becomes flaky.
+        assert deviation_percentage <= deviation_threshold
+
+    def test_pybool_truth_probability_zero(self):
+        self.__test_pybool_truth_probability(0, deviation_threshold=0)
+
+    def test_pybool_truth_probability_twenty_five(self):
+        self.__test_pybool_truth_probability(25)
+
+    def test_pybool_truth_probability_fifty(self):
+        self.__test_pybool_truth_probability(50)
+
+    def test_pybool_truth_probability_seventy_five(self):
+        self.__test_pybool_truth_probability(75)
+
+    def test_pybool_truth_probability_hundred(self):
+        self.__test_pybool_truth_probability(100, deviation_threshold=0)
+
+    def __test_pybool_invalid_truth_probability(self, truth_probability: int):
+        with pytest.raises(ValueError) as exception:
+            self.factory.pybool(truth_probability=truth_probability)
+
+        message_expected = "Invalid `truth_probability` value: must be between `0` and `100` inclusive"
+        message_actual = str(exception.value)
+        assert message_expected == message_actual
+
+    def test_pybool_truth_probability_less_than_zero(self):
+        self.__test_pybool_invalid_truth_probability(-1)
+
+    def test_pybool_truth_probability_more_than_hundred(self):
+        self.__test_pybool_invalid_truth_probability(101)
 
     def test_pytuple(self):
         with warnings.catch_warnings(record=True) as w:

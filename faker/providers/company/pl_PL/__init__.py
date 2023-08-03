@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from .. import Provider as CompanyProvider
 
@@ -55,7 +55,6 @@ def company_vat_checksum(digits: List[int]) -> int:
 
 
 class Provider(CompanyProvider):
-
     formats = (
         "{{last_name}} {{company_suffix}}",
         "{{last_name}}-{{last_name}} {{company_suffix}}",
@@ -84,11 +83,11 @@ class Provider(CompanyProvider):
         "i syn s.c.",
     )
 
-    def company_prefix(self, min_length: Optional[int] = None, max_length: Optional[int] = None) -> str:
+    def company_prefix(self) -> str:
         """
         :example 'Grupa'
         """
-        return self.random_element(self.company_prefixes, min_length, max_length)
+        return self.random_element(self.company_prefixes)
 
     def regon(self) -> str:
         """

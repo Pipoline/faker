@@ -2,6 +2,7 @@ import re
 
 from typing import Pattern
 
+from faker.providers.automotive import calculate_vin_str_weight
 from faker.providers.automotive.de_DE import Provider as DeDeAutomotiveProvider
 from faker.providers.automotive.es_ES import Provider as EsEsAutomotiveProvider
 from faker.providers.automotive.ro_RO import Provider as RoRoAutomotiveProvider
@@ -22,6 +23,19 @@ class _SimpleAutomotiveTestMixin:
             match = self.license_plate_pattern.fullmatch(license_plate)
             assert match is not None
             self.perform_extra_checks(license_plate, match)
+
+    def test_vin(self, faker, num_samples):
+        for _ in range(num_samples):
+            vin_number = faker.vin()
+            # length check: 17
+            assert len(vin_number) == 17
+
+            # verify checksum: vin_number[8]
+            front_part_weight = calculate_vin_str_weight(vin_number[:8], [8, 7, 6, 5, 4, 3, 2, 10])
+            rear_part_weight = calculate_vin_str_weight(vin_number[9:], [9, 8, 7, 6, 5, 4, 3, 2])
+            checksum = (front_part_weight + rear_part_weight) % 11
+            checksum_str = "X" if checksum == 10 else str(checksum)
+            assert vin_number[8] == checksum_str
 
 
 class TestArBh(_SimpleAutomotiveTestMixin):
@@ -310,3 +324,26 @@ class TestDeCh(_SimpleAutomotiveTestMixin):
     """Test de_CH automotive provider methods"""
 
     license_plate_pattern: Pattern = re.compile(r"[A-Z]{2}-\d{1,3}\s?\d{0,3}")
+
+
+class TestNlBe(_SimpleAutomotiveTestMixin):
+    """Test nl_BE automotive provider methods"""
+
+    license_plate_pattern: Pattern = re.compile(r"(\d{3}-[A-Z]{3})|" r"([A-Z]{3}-\d{3})|" r"([1-2]-[A-Z]{3}-\d{3})")
+
+
+class TestZhCn(_SimpleAutomotiveTestMixin):
+    """Test zh_CN automotive provider methods"""
+
+    license_plate_pattern: Pattern = re.compile(r"^[京津冀晋蒙辽吉黑沪苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云渝藏陕甘青宁新]{1}[A-Z]{1}-[A-Z0-9]{5}")
+
+
+class TestZhTw(_SimpleAutomotiveTestMixin):
+    """Test zh_TW automotive provider methods"""
+
+    license_plate_pattern: Pattern = re.compile(
+        r"([A-Z]{2}-\d{4})|"  # prior 2012 v1
+        r"(\d{4}-[A-Z]{2})|"  # prior 2012 v2
+        r"([A-Z]{3}-\d{4})|"  # new format since 2014
+        r"([A-Z]{3}-\d{3})",  # commercial cars since 2012
+    )
